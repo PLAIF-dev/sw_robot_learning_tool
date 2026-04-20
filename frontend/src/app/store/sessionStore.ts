@@ -24,46 +24,17 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   },
 
   async activateSession(id) {
-    try {
-      await sessionsApi.activate(id)
-    } catch {
-      // mock fallback
-    }
-
-    const sessions = get().sessions.map((session) => ({
-      ...session,
-      isActive: session.id === id,
-    }))
-
-    set({
-      sessions,
-      activeSession: sessions.find((session) => session.id === id) ?? null,
-    })
+    await sessionsApi.activate(id)
+    await get().fetchSessions()
   },
 
   async createSession(name, mode, description, baseCheckpointId) {
-    const created = await sessionsApi.create({ name, mode, description, baseCheckpointId })
-    const sessions = [...get().sessions, created]
-    set({ sessions })
+    await sessionsApi.create({ name, mode, description, baseCheckpointId })
+    await get().fetchSessions()
   },
 
   async duplicateSession(id) {
-    try {
-      const duplicated = await sessionsApi.duplicate(id)
-      set({ sessions: [...get().sessions, duplicated] })
-    } catch {
-      const session = get().sessions.find((item) => item.id === id)
-      if (session) {
-        const duplicated: Session = {
-          ...session,
-          id: `sess-${Date.now()}`,
-          name: `${session.name} (복제)`,
-          isActive: false,
-        }
-        set({
-          sessions: [...get().sessions, duplicated],
-        })
-      }
-    }
+    await sessionsApi.duplicate(id)
+    await get().fetchSessions()
   },
 }))

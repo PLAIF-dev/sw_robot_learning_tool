@@ -28,40 +28,16 @@ export const sessionsApi = {
   getAll: () => safeGet<Session[]>('/sessions', fallbackSessions),
 
   async create(payload: { name: string; mode: SessionMode; description: string; baseCheckpointId?: string }): Promise<Session> {
-    try {
-      const response = await apiClient.post<Session>('/sessions', payload)
-      return response.data
-    } catch {
-      return {
-        id: `sess-${Date.now()}`,
-        name: payload.name,
-        mode: payload.mode,
-        description: payload.description,
-        currentStage: 'Environment',
-        isActive: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        baseCheckpointId: payload.baseCheckpointId ?? null,
-      }
-    }
+    const response = await apiClient.post<Session>('/sessions', payload)
+    return response.data
   },
 
   async duplicate(id: string): Promise<Session> {
-    try {
-      const response = await apiClient.post<Session>(`/sessions/${id}/duplicate`)
-      return response.data
-    } catch {
-      const source = fallbackSessions.find((session) => session.id === id) ?? fallbackSessions[0]
-      return {
-        ...source,
-        id: `sess-${Date.now()}`,
-        name: `${source.name} (복제)`,
-        isActive: false,
-      }
-    }
+    const response = await apiClient.post<Session>(`/sessions/${id}/duplicate`)
+    return response.data
   },
 
-  async activate(id: string) {
+  async activate(id: string): Promise<void> {
     await apiClient.post(`/sessions/${id}/activate`)
   },
 }

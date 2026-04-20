@@ -28,6 +28,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ token: mockToken, isAuthenticated: true, loginError: null })
         return true
       }
+
       set({ loginError: '비밀번호가 올바르지 않습니다.' })
       return false
     }

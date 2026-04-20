@@ -66,6 +66,7 @@ export function TrainingPage() {
   async function changeStage(nextStage: TrainingStage) {
     setStage(nextStage)
     await trainingApi.setCurrentStage(nextStage)
+    await refresh()
   }
 
   return (
@@ -125,7 +126,7 @@ export function TrainingPage() {
               </label>
             </div>
             <div className="mt-6 flex gap-3">
-              <button className="rounded-2xl bg-sky-500 px-4 py-3 text-sm font-semibold text-white" onClick={() => void trainingApi.saveEnvironment(environment)}>
+              <button className="rounded-2xl bg-sky-500 px-4 py-3 text-sm font-semibold text-white" onClick={() => void trainingApi.saveEnvironment(environment).then(refresh)}>
                 저장
               </button>
               <button className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-slate-200" onClick={() => void changeStage('Classifier')}>

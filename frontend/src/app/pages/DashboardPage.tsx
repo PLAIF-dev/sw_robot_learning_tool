@@ -17,7 +17,7 @@ export function DashboardPage() {
           <div className="section-title">대시보드</div>
           <h1 className="mt-3 text-3xl font-semibold text-slate-50">현재 학습 운영 상태</h1>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-400">
-            최근 세션, 장치 연결 상태, 체크포인트, 데모/에피소드 지표를 한눈에 보고 빠르게 학습 실행으로 이동할 수 있습니다.
+            최근 세션, 장치 연결 상태, 체크포인트, 데모와 에피소드 지표를 한눈에 보고 빠르게 학습 실행으로 이동할 수 있습니다.
           </p>
           <div className="mt-6 grid gap-4 md:grid-cols-4">
             <div className="panel-muted p-4">
@@ -43,9 +43,9 @@ export function DashboardPage() {
           <div className="section-title">빠른 시작</div>
           <div className="mt-4 space-y-3">
             {[
-              '1. 세션에서 현재 작업 세션을 활성화합니다.',
-              '2. 학습 실행에서 기본 환경 설정과 Classifier 수집을 점검합니다.',
-              '3. 우측 패널의 TCP 수동 조작으로 양팔 TCP를 미세 조정합니다.',
+              '1. 세션 화면에서 현재 작업 세션을 활성화합니다.',
+              '2. 학습 실행에서 기본 환경 설정과 Classifier 샘플 수집을 점검합니다.',
+              '3. 우측 상시 패널의 TCP 수동 조작으로 양팔 TCP를 미세 조정합니다.',
               '4. 데모 수집 또는 본 학습으로 넘어가 시연 흐름을 완성합니다.',
             ].map((line) => (
               <div key={line} className="panel-muted p-3 text-sm text-slate-300">

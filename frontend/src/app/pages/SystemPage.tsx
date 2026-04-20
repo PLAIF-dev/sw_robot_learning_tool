@@ -27,9 +27,9 @@ export function SystemPage() {
         )}
         <div className="mt-6 section-title">장치 연결 상태</div>
         <div className="mt-3 space-y-2 text-sm text-slate-300">
-          <div className="panel-muted p-3">왼팔: {deviceStatus?.leftArm.state ?? '알 수 없음'}</div>
-          <div className="panel-muted p-3">오른팔: {deviceStatus?.rightArm.state ?? '알 수 없음'}</div>
-          <div className="panel-muted p-3">컨트롤러: {deviceStatus?.controller.state ?? '알 수 없음'}</div>
+          <div className="panel-muted p-3">왼팔: {deviceStatus?.leftArm.state ?? '상태 정보 없음'}</div>
+          <div className="panel-muted p-3">오른팔: {deviceStatus?.rightArm.state ?? '상태 정보 없음'}</div>
+          <div className="panel-muted p-3">컨트롤러: {deviceStatus?.controller.state ?? '상태 정보 없음'}</div>
         </div>
       </section>
 

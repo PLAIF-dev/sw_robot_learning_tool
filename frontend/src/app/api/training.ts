@@ -1,22 +1,28 @@
 import { apiClient, safeGet } from './client'
 import type {
+  CameraChannel,
   ClassifierStatus,
   DemoStatus,
   EvaluationSummary,
   MainTrainingStatus,
+  RoiRectangle,
   TrainingEnvironment,
   TrainingStage,
 } from '../types'
 
 const environmentFallback: TrainingEnvironment = {
-  robotModel: 'DualArm-Mock-v1',
-  cameraResolution: '640x480',
-  gripperType: 'Parallel',
-  controllerType: 'Keyboard',
+  robotModel: 'RB3 양팔로봇',
+  controllerType: '3D Mouse',
   learningRate: 0.001,
   batchSize: 32,
   maxEpisodes: 100,
 }
+
+const roiFallback: RoiRectangle[] = [
+  { channel: 'left', x: 0.16, y: 0.18, width: 0.28, height: 0.28 },
+  { channel: 'right', x: 0.54, y: 0.2, width: 0.24, height: 0.26 },
+  { channel: 'head', x: 0.3, y: 0.22, width: 0.34, height: 0.3 },
+]
 
 const classifierFallback: ClassifierStatus = {
   successCount: 25,
@@ -45,12 +51,13 @@ const mainFallback: MainTrainingStatus = {
 
 const evaluationFallback: EvaluationSummary = {
   environmentConfigured: true,
+  roiConfigured: true,
   classifierTrained: true,
   demoCollected: true,
   trainingCompleted: true,
   totalEpisodes: 10,
   successRate: 0.7,
-  nextRecommendedAction: '체크포인트 저장 후 시연을 진행하세요.',
+  nextRecommendedAction: '체크포인트를 저장한 뒤 시연 시나리오를 진행하세요.',
   checkpoints: ['ckpt-001', 'ckpt-002'],
 }
 
@@ -62,6 +69,11 @@ export const trainingApi = {
   getEnvironment: () => safeGet<TrainingEnvironment>('/training/environment', environmentFallback),
   saveEnvironment: async (payload: TrainingEnvironment) => {
     await apiClient.put('/training/environment', payload)
+  },
+  getRoi: () => safeGet<RoiRectangle[]>('/training/roi', roiFallback),
+  saveRoi: async (channel: CameraChannel, roi: Omit<RoiRectangle, 'channel'>) => {
+    const response = await apiClient.put<RoiRectangle>(`/training/roi/${channel}`, roi)
+    return response.data
   },
   getClassifier: () => safeGet<ClassifierStatus>('/training/classifier', classifierFallback),
   collectClassifier: async (label: 'success' | 'failure' | 'out_of_range') => {

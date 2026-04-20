@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ROUTES } from '../../constants'
+import { ROUTES, TRAINING_STAGE_LABELS } from '../../constants'
 import { useAuthStore } from '../../store/authStore'
 import { useDeviceStore } from '../../store/deviceStore'
 import { useSessionStore } from '../../store/sessionStore'
@@ -22,7 +22,7 @@ export function TopBar() {
             <StatusBadge tone={activeSession.mode === 'NewTraining' ? 'info' : 'warning'}>
               {activeSession.mode === 'NewTraining' ? '신규 학습' : '추가 학습'}
             </StatusBadge>
-            <StatusBadge>{activeSession.currentStage}</StatusBadge>
+            <StatusBadge>{TRAINING_STAGE_LABELS[activeSession.currentStage]}</StatusBadge>
           </div>
         ) : (
           <span className="text-sm text-slate-400">활성 세션 없음</span>

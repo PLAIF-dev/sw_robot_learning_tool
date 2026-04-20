@@ -14,4 +14,4 @@ public class Session
 }
 
 public enum SessionMode { NewTraining, AdditionalTraining }
-public enum TrainingStage { Environment, Classifier, Demo, MainTraining, Evaluation }
+public enum TrainingStage { Environment, Roi, Classifier, Demo, MainTraining, Evaluation }

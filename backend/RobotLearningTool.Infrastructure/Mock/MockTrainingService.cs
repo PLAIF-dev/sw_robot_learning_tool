@@ -6,7 +6,7 @@ namespace RobotLearningTool.Infrastructure.Mock;
 
 public class MockTrainingService : ITrainingService
 {
-    private TrainingStage _currentStage = TrainingStage.Evaluation;
+    private TrainingStage _currentStage = TrainingStage.Environment;
     private TrainingEnvironmentConfig _environment = new();
     private ClassifierStatus _classifier = new()
     {
@@ -15,6 +15,13 @@ public class MockTrainingService : ITrainingService
         OutOfRangeCount = 3,
         CurrentLabel = "success"
     };
+
+    private readonly List<RoiRectangle> _roiSettings =
+    [
+        new() { Channel = "left", X = 0.16f, Y = 0.18f, Width = 0.28f, Height = 0.28f },
+        new() { Channel = "right", X = 0.54f, Y = 0.20f, Width = 0.24f, Height = 0.26f },
+        new() { Channel = "head", X = 0.30f, Y = 0.22f, Width = 0.34f, Height = 0.30f }
+    ];
 
     private bool _isDemoRecording;
     private bool _isMainTrainingRunning;
@@ -73,6 +80,43 @@ public class MockTrainingService : ITrainingService
     {
         _environment = config;
         return Task.CompletedTask;
+    }
+
+    public Task<List<RoiRectangle>> GetRoiSettingsAsync() =>
+        Task.FromResult(_roiSettings
+            .Select(CloneRoi)
+            .ToList());
+
+    public Task<RoiRectangle> SaveRoiSettingAsync(string channel, RoiRectangle roi)
+    {
+        var normalizedChannel = channel.Trim().ToLowerInvariant();
+        var existing = _roiSettings.FirstOrDefault(item => item.Channel.Equals(normalizedChannel, StringComparison.OrdinalIgnoreCase));
+
+        var clamped = new RoiRectangle
+        {
+            Channel = normalizedChannel,
+            X = Clamp01(roi.X),
+            Y = Clamp01(roi.Y),
+            Width = Math.Clamp(roi.Width, 0.05f, 0.9f),
+            Height = Math.Clamp(roi.Height, 0.05f, 0.9f)
+        };
+
+        clamped.X = Math.Clamp(clamped.X, 0f, 1f - clamped.Width);
+        clamped.Y = Math.Clamp(clamped.Y, 0f, 1f - clamped.Height);
+
+        if (existing is null)
+        {
+            _roiSettings.Add(clamped);
+        }
+        else
+        {
+            existing.X = clamped.X;
+            existing.Y = clamped.Y;
+            existing.Width = clamped.Width;
+            existing.Height = clamped.Height;
+        }
+
+        return Task.FromResult(CloneRoi(existing ?? clamped));
     }
 
     public Task<ClassifierStatus> GetClassifierStatusAsync() => Task.FromResult(_classifier);
@@ -208,18 +252,20 @@ public class MockTrainingService : ITrainingService
         var successCount = _episodes.Count(item => item.Success == true);
         var successRate = _episodes.Count == 0 ? 0 : (float)successCount / _episodes.Count;
         var trainingCompleted = _episodes.Count >= 10 && successRate >= 0.6f;
+        var roiConfigured = _roiSettings.Count == 3;
 
         return Task.FromResult(new EvaluationSummary
         {
             EnvironmentConfigured = true,
+            RoiConfigured = roiConfigured,
             ClassifierTrained = _classifier.CanProceed,
             DemoCollected = _demos.Count >= 3,
             TrainingCompleted = trainingCompleted,
             TotalEpisodes = _episodes.Count,
             SuccessRate = successRate,
             NextRecommendedAction = trainingCompleted
-                ? "체크포인트 저장 후 추가 학습 후보를 검토하세요."
-                : "데모와 에피소드를 더 수집해 최소 조건을 채우세요.",
+                ? "체크포인트를 저장하고 추가 학습 후보를 검토하세요."
+                : "ROI와 데모, 에피소드 조건을 채운 뒤 본 학습을 이어가세요.",
             Checkpoints = ["ckpt-001", "ckpt-002"]
         });
     }
@@ -248,4 +294,16 @@ public class MockTrainingService : ITrainingService
 
     public Task<InterventionRecord?> GetInterventionByIdAsync(string id) =>
         Task.FromResult(_interventions.FirstOrDefault(item => item.Id == id));
+
+    private static RoiRectangle CloneRoi(RoiRectangle roi) =>
+        new()
+        {
+            Channel = roi.Channel,
+            X = roi.X,
+            Y = roi.Y,
+            Width = roi.Width,
+            Height = roi.Height
+        };
+
+    private static float Clamp01(float value) => Math.Clamp(value, 0f, 1f);
 }

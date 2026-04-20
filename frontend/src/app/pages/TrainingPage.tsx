@@ -3,26 +3,38 @@ import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'rec
 import { TRAINING_STAGES } from '../constants'
 import { trainingApi } from '../api/training'
 import type {
+  CameraChannel,
   ClassifierStatus,
   DemoStatus,
   EvaluationSummary,
   MainTrainingStatus,
+  RoiRectangle,
   TrainingEnvironment,
   TrainingStage,
 } from '../types'
 import { CameraPanel } from '../components/camera/CameraPanel'
+import { RoiEditorCard } from '../components/camera/RoiEditorCard'
 import { RobotViewer3D } from '../components/robot/RobotViewer3D'
 import { useControlStore } from '../store/controlStore'
 import { useKeyboardTcp } from '../hooks/useKeyboardTcp'
+import { useDeviceStore } from '../store/deviceStore'
+
+const DEFAULT_ROI_MAP: Record<CameraChannel, RoiRectangle> = {
+  left: { channel: 'left', x: 0.16, y: 0.18, width: 0.28, height: 0.28 },
+  right: { channel: 'right', x: 0.54, y: 0.2, width: 0.24, height: 0.26 },
+  head: { channel: 'head', x: 0.3, y: 0.22, width: 0.34, height: 0.3 },
+}
 
 export function TrainingPage() {
   const leftJoints = useControlStore((state) => state.leftJoints)
   const rightJoints = useControlStore((state) => state.rightJoints)
   const selectedTarget = useControlStore((state) => state.target)
   const refreshControl = useControlStore((state) => state.refresh)
+  const deviceStatus = useDeviceStore((state) => state.status)
 
   const [stage, setStage] = useState<TrainingStage>('Environment')
   const [environment, setEnvironment] = useState<TrainingEnvironment | null>(null)
+  const [roiSettings, setRoiSettings] = useState<Record<CameraChannel, RoiRectangle>>(DEFAULT_ROI_MAP)
   const [classifier, setClassifier] = useState<ClassifierStatus | null>(null)
   const [demo, setDemo] = useState<DemoStatus | null>(null)
   const [mainTraining, setMainTraining] = useState<MainTrainingStatus | null>(null)
@@ -31,9 +43,10 @@ export function TrainingPage() {
   useKeyboardTcp(true)
 
   async function refresh() {
-    const [stageResponse, nextEnvironment, nextClassifier, nextDemo, nextMain, nextEvaluation] = await Promise.all([
+    const [stageResponse, nextEnvironment, nextRoi, nextClassifier, nextDemo, nextMain, nextEvaluation] = await Promise.all([
       trainingApi.getCurrentStage(),
       trainingApi.getEnvironment(),
+      trainingApi.getRoi(),
       trainingApi.getClassifier(),
       trainingApi.getDemo(),
       trainingApi.getMain(),
@@ -42,6 +55,7 @@ export function TrainingPage() {
 
     setStage(stageResponse.stage)
     setEnvironment(nextEnvironment)
+    setRoiSettings((previous) => mergeRoi(previous, nextRoi))
     setClassifier(nextClassifier)
     setDemo(nextDemo)
     setMainTraining(nextMain)
@@ -67,6 +81,20 @@ export function TrainingPage() {
     setStage(nextStage)
     await trainingApi.setCurrentStage(nextStage)
     await refresh()
+  }
+
+  async function handleSaveRoi(nextRoi: RoiRectangle) {
+    const saved = await trainingApi.saveRoi(nextRoi.channel, {
+      x: nextRoi.x,
+      y: nextRoi.y,
+      width: nextRoi.width,
+      height: nextRoi.height,
+    })
+
+    setRoiSettings((previous) => ({
+      ...previous,
+      [saved.channel]: saved,
+    }))
   }
 
   return (
@@ -96,40 +124,85 @@ export function TrainingPage() {
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <label className="panel-muted p-4">
                 <div className="text-sm text-slate-300">로봇 설정</div>
-                <input className="mt-3 w-full rounded-xl bg-transparent text-slate-100" value={environment.robotModel} onChange={(e) => setEnvironment({ ...environment, robotModel: e.target.value })} />
+                <select
+                  className="mt-3 w-full rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2 text-slate-100"
+                  value={environment.robotModel}
+                  onChange={(event) => setEnvironment({ ...environment, robotModel: event.target.value as TrainingEnvironment['robotModel'] })}
+                >
+                  <option value="RB3 양팔로봇">RB3 양팔로봇</option>
+                  <option value="RB5 양팔로봇">RB5 양팔로봇</option>
+                </select>
               </label>
-              <label className="panel-muted p-4">
-                <div className="text-sm text-slate-300">카메라 설정</div>
-                <input className="mt-3 w-full rounded-xl bg-transparent text-slate-100" value={environment.cameraResolution} onChange={(e) => setEnvironment({ ...environment, cameraResolution: e.target.value })} />
-              </label>
-              <label className="panel-muted p-4">
-                <div className="text-sm text-slate-300">그리퍼 설정</div>
-                <input className="mt-3 w-full rounded-xl bg-transparent text-slate-100" value={environment.gripperType} onChange={(e) => setEnvironment({ ...environment, gripperType: e.target.value })} />
-              </label>
+
               <label className="panel-muted p-4">
                 <div className="text-sm text-slate-300">제어 장치 설정</div>
-                <input className="mt-3 w-full rounded-xl bg-transparent text-slate-100" value={environment.controllerType} onChange={(e) => setEnvironment({ ...environment, controllerType: e.target.value })} />
+                <select
+                  className="mt-3 w-full rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2 text-slate-100"
+                  value={environment.controllerType}
+                  onChange={(event) => setEnvironment({ ...environment, controllerType: event.target.value as TrainingEnvironment['controllerType'] })}
+                >
+                  <option value="3D Mouse">3D Mouse</option>
+                  <option value="Master Arm">Master Arm</option>
+                  <option value="UMI">UMI</option>
+                </select>
               </label>
             </div>
             <div className="mt-4 grid gap-4 md:grid-cols-3">
               <label className="panel-muted p-4">
                 <div className="text-sm text-slate-300">Learning Rate</div>
-                <input className="mt-3 w-full rounded-xl bg-transparent text-slate-100" type="number" value={environment.learningRate} onChange={(e) => setEnvironment({ ...environment, learningRate: Number(e.target.value) })} />
+                <input className="mt-3 w-full rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2 text-slate-100" type="number" value={environment.learningRate} onChange={(e) => setEnvironment({ ...environment, learningRate: Number(e.target.value) })} />
               </label>
               <label className="panel-muted p-4">
                 <div className="text-sm text-slate-300">Batch Size</div>
-                <input className="mt-3 w-full rounded-xl bg-transparent text-slate-100" type="number" value={environment.batchSize} onChange={(e) => setEnvironment({ ...environment, batchSize: Number(e.target.value) })} />
+                <input className="mt-3 w-full rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2 text-slate-100" type="number" value={environment.batchSize} onChange={(e) => setEnvironment({ ...environment, batchSize: Number(e.target.value) })} />
               </label>
               <label className="panel-muted p-4">
                 <div className="text-sm text-slate-300">Max Episodes</div>
-                <input className="mt-3 w-full rounded-xl bg-transparent text-slate-100" type="number" value={environment.maxEpisodes} onChange={(e) => setEnvironment({ ...environment, maxEpisodes: Number(e.target.value) })} />
+                <input className="mt-3 w-full rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2 text-slate-100" type="number" value={environment.maxEpisodes} onChange={(e) => setEnvironment({ ...environment, maxEpisodes: Number(e.target.value) })} />
               </label>
             </div>
             <div className="mt-6 flex gap-3">
               <button className="rounded-2xl bg-sky-500 px-4 py-3 text-sm font-semibold text-white" onClick={() => void trainingApi.saveEnvironment(environment).then(refresh)}>
                 저장
               </button>
-              <button className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-slate-200" onClick={() => void changeStage('Classifier')}>
+              <button className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-slate-200" onClick={() => void changeStage('Roi')}>
+                다음 단계
+              </button>
+            </div>
+          </div>
+        )}
+
+        {stage === 'Roi' && (
+          <div className="panel p-6">
+            <div className="section-title">카메라 ROI 설정</div>
+            <div className="mt-3 text-sm leading-6 text-slate-400">
+              Left, Right, Head 카메라 이미지를 실시간으로 보면서 ROI 박스를 드래그해 위치를 조정할 수 있습니다. 드래그를 놓는 즉시 저장되며, 다시 열어도 백엔드 메모리 상태로 복원됩니다.
+            </div>
+            <div className="mt-6 grid gap-4 xl:grid-cols-3">
+              <RoiEditorCard
+                channel="left"
+                roi={roiSettings.left}
+                connected={deviceStatus?.leftCamera.connected ?? false}
+                onSave={handleSaveRoi}
+              />
+              <RoiEditorCard
+                channel="right"
+                roi={roiSettings.right}
+                connected={deviceStatus?.rightCamera.connected ?? false}
+                onSave={handleSaveRoi}
+              />
+              <RoiEditorCard
+                channel="head"
+                roi={roiSettings.head}
+                connected={deviceStatus?.headCamera.connected ?? false}
+                onSave={handleSaveRoi}
+              />
+            </div>
+            <div className="mt-6 flex gap-3">
+              <button className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-slate-200" onClick={() => void changeStage('Environment')}>
+                이전 단계
+              </button>
+              <button className="rounded-2xl bg-sky-500 px-4 py-3 text-sm font-semibold text-white" onClick={() => void changeStage('Classifier')}>
                 다음 단계
               </button>
             </div>
@@ -265,9 +338,10 @@ export function TrainingPage() {
         {stage === 'Evaluation' && evaluation && (
           <div className="panel p-6">
             <div className="section-title">평가 / 완료 상태</div>
-            <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
               {[
                 { label: '환경 구성', ok: evaluation.environmentConfigured },
+                { label: 'ROI 설정', ok: evaluation.roiConfigured },
                 { label: 'Classifier 학습', ok: evaluation.classifierTrained },
                 { label: '데모 수집', ok: evaluation.demoCollected },
                 { label: '본 학습 완료', ok: evaluation.trainingCompleted },
@@ -288,4 +362,15 @@ export function TrainingPage() {
       </section>
     </div>
   )
+}
+
+function mergeRoi(
+  previous: Record<CameraChannel, RoiRectangle>,
+  next: RoiRectangle[],
+): Record<CameraChannel, RoiRectangle> {
+  const merged = { ...previous }
+  for (const item of next) {
+    merged[item.channel] = item
+  }
+  return merged
 }

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
+import { TRAINING_STAGE_LABELS } from '../constants'
 import { useSessionStore } from '../store/sessionStore'
 import type { SessionMode } from '../types'
 
@@ -54,7 +55,7 @@ export function SessionsPage() {
               <div className="mt-3 flex gap-2 text-xs text-slate-400">
                 <span>{session.mode === 'NewTraining' ? '신규 학습' : '추가 학습'}</span>
                 <span>•</span>
-                <span>{session.currentStage}</span>
+                <span>{TRAINING_STAGE_LABELS[session.currentStage]}</span>
               </div>
             </button>
           ))}
@@ -114,7 +115,7 @@ export function SessionsPage() {
                 </div>
                 <div className="panel-muted p-4">
                   <div className="section-title">현재 단계</div>
-                  <div className="mt-2 text-sm text-slate-100">{selectedSession.currentStage}</div>
+                  <div className="mt-2 text-sm text-slate-100">{TRAINING_STAGE_LABELS[selectedSession.currentStage]}</div>
                 </div>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">

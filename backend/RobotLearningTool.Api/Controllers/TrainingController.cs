@@ -48,6 +48,27 @@ public class TrainingController : ControllerBase
         return Ok(new { message = "기본 환경 설정을 저장했습니다." });
     }
 
+    [HttpGet("roi")]
+    public async Task<IActionResult> GetRoi()
+    {
+        return Ok(await _trainingService.GetRoiSettingsAsync());
+    }
+
+    [HttpPut("roi/{channel}")]
+    public async Task<IActionResult> SaveRoi(string channel, [FromBody] SaveRoiRequest request)
+    {
+        var roi = await _trainingService.SaveRoiSettingAsync(channel, new RoiRectangle
+        {
+            Channel = channel,
+            X = request.X,
+            Y = request.Y,
+            Width = request.Width,
+            Height = request.Height
+        });
+
+        return Ok(roi);
+    }
+
     [HttpGet("classifier")]
     public async Task<IActionResult> GetClassifier()
     {
@@ -143,6 +164,7 @@ public class TrainingController : ControllerBase
     }
 
     public record SetStageRequest(string Stage);
+    public record SaveRoiRequest(float X, float Y, float Width, float Height);
     public record CollectClassifierRequest(string Label);
     public record MarkResultRequest(bool Success);
 }

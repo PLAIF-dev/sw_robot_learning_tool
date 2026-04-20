@@ -1,5 +1,5 @@
 export type SessionMode = 'NewTraining' | 'AdditionalTraining'
-export type TrainingStage = 'Environment' | 'Classifier' | 'Demo' | 'MainTraining' | 'Evaluation'
+export type TrainingStage = 'Environment' | 'Roi' | 'Classifier' | 'Demo' | 'MainTraining' | 'Evaluation'
 export type TcpTarget = 'left' | 'right' | 'both'
 export type ControlMode = 'move' | 'rotate'
 export type CoordFrame = 'world' | 'local'
@@ -54,13 +54,19 @@ export interface DashboardSummary {
 }
 
 export interface TrainingEnvironment {
-  robotModel: string
-  cameraResolution: string
-  gripperType: string
-  controllerType: string
+  robotModel: 'RB3 양팔로봇' | 'RB5 양팔로봇'
+  controllerType: '3D Mouse' | 'Master Arm' | 'UMI'
   learningRate: number
   batchSize: number
   maxEpisodes: number
+}
+
+export interface RoiRectangle {
+  channel: CameraChannel
+  x: number
+  y: number
+  width: number
+  height: number
 }
 
 export interface ClassifierStatus {
@@ -108,6 +114,7 @@ export interface MainTrainingStatus {
 
 export interface EvaluationSummary {
   environmentConfigured: boolean
+  roiConfigured: boolean
   classifierTrained: boolean
   demoCollected: boolean
   trainingCompleted: boolean

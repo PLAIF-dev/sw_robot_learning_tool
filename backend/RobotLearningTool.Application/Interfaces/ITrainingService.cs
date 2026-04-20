@@ -9,6 +9,8 @@ public interface ITrainingService
     Task SetCurrentStageAsync(TrainingStage stage);
     Task<TrainingEnvironmentConfig> GetEnvironmentAsync();
     Task SaveEnvironmentAsync(TrainingEnvironmentConfig config);
+    Task<List<RoiRectangle>> GetRoiSettingsAsync();
+    Task<RoiRectangle> SaveRoiSettingAsync(string channel, RoiRectangle roi);
     Task<ClassifierStatus> GetClassifierStatusAsync();
     Task CollectClassifierSampleAsync(string label);
     Task ResetClassifierAsync();

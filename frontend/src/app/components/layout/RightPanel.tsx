@@ -1,8 +1,8 @@
+import { TRAINING_STAGE_LABELS } from '../../constants'
 import { useControlStore } from '../../store/controlStore'
 import { useDeviceStore } from '../../store/deviceStore'
 import { useSessionStore } from '../../store/sessionStore'
 import { StatusBadge } from '../common/StatusBadge'
-import { TcpControlPanel } from '../tcp/TcpControlPanel'
 
 function StatusRow({ label, online, detail }: { label: string; online: boolean; detail?: string }) {
   return (
@@ -45,7 +45,7 @@ export function RightPanel() {
         </section>
 
         <section className="panel p-4">
-          <div className="section-title">현재 세션 / IK</div>
+          <div className="section-title">현재 세션 / 단계</div>
           <div className="mt-3 space-y-2">
             {activeSession ? (
               <>
@@ -54,20 +54,13 @@ export function RightPanel() {
                   <StatusBadge tone={activeSession.mode === 'NewTraining' ? 'info' : 'warning'}>
                     {activeSession.mode === 'NewTraining' ? '신규 학습' : '추가 학습'}
                   </StatusBadge>
-                  <StatusBadge>{activeSession.currentStage}</StatusBadge>
+                  <StatusBadge>{TRAINING_STAGE_LABELS[activeSession.currentStage]}</StatusBadge>
                 </div>
               </>
             ) : (
               <div className="text-sm text-slate-400">활성 세션을 선택해 주세요.</div>
             )}
             {ikSuccess !== null && <StatusBadge tone={ikSuccess ? 'success' : 'danger'}>{ikSuccess ? 'IK 정상' : 'IK 실패'}</StatusBadge>}
-          </div>
-        </section>
-
-        <section className="panel p-4">
-          <div className="section-title">TCP 수동 조작</div>
-          <div className="mt-3">
-            <TcpControlPanel />
           </div>
         </section>
       </div>

@@ -1,0 +1,60 @@
+{
+  "sessions": [
+    {
+      "id": "sess-001",
+      "name": "Cup Pick Task v1",
+      "mode": "NewTraining",
+      "description": "컵 집기 작업 - 초기 학습",
+      "currentStage": "Environment",
+      "isActive": false,
+      "createdAt": "2024-01-15T10:00:00Z"
+    },
+    {
+      "id": "sess-002",
+      "name": "Sorting Task Demo",
+      "mode": "NewTraining",
+      "description": "물건 정렬 작업 시연용 세션",
+      "currentStage": "Evaluation",
+      "isActive": true,
+      "createdAt": "2024-01-16T09:00:00Z"
+    },
+    {
+      "id": "sess-003",
+      "name": "Cup Pick Continued",
+      "mode": "AdditionalTraining",
+      "description": "Cup Pick Task v1 기반 추가 학습",
+      "currentStage": "MainTraining",
+      "isActive": false,
+      "baseCheckpointId": "ckpt-001",
+      "createdAt": "2024-01-17T11:00:00Z"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "ckpt-001",
+      "sessionId": "sess-002",
+      "name": "Checkpoint-01",
+      "successRate": 0.65,
+      "averageDuration": 5.2,
+      "totalEpisodes": 40,
+      "createdAt": "2024-01-16T12:00:00Z"
+    },
+    {
+      "id": "ckpt-002",
+      "sessionId": "sess-002",
+      "name": "Checkpoint-02",
+      "successRate": 0.78,
+      "averageDuration": 4.8,
+      "totalEpisodes": 80,
+      "createdAt": "2024-01-16T14:00:00Z"
+    }
+  ],
+  "tcpPoseSample": {
+    "left": { "x": 0.3, "y": 0.1, "z": 0.5, "roll": 0.0, "pitch": -1.57, "yaw": 0.0 },
+    "right": { "x": 0.3, "y": -0.1, "z": 0.5, "roll": 0.0, "pitch": -1.57, "yaw": 0.0 }
+  },
+  "jointStateSample": {
+    "left": [0.0, -0.5, 1.0, 0.0, 0.5, 0.0],
+    "right": [0.0, -0.5, 1.0, 0.0, 0.5, 0.0]
+  }
+}

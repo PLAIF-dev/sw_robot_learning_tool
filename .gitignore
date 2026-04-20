@@ -1,0 +1,24 @@
+# 환경 변수
+.env
+.env.local
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Backend
+backend/**/bin/
+backend/**/obj/
+backend/**/*.user
+backend/.vs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+*.suo
+*.swp

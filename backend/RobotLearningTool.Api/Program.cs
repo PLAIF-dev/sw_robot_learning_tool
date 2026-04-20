@@ -33,7 +33,8 @@ builder.Services.AddSingleton<IAuthService>(_ =>
     new MockAuthService(builder.Configuration["Auth:Password"] ?? Environment.GetEnvironmentVariable("AUTH_PASSWORD") ?? "1111"));
 builder.Services.AddSingleton<ISessionService, MockSessionService>();
 builder.Services.AddSingleton<IDeviceService, MockDeviceService>();
-builder.Services.AddSingleton<ICameraService, MockCameraService>();
+builder.Services.AddSingleton<ICameraService>(_ =>
+    new MockCameraService(Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", "robot_mock_frames"))));
 builder.Services.AddSingleton<ITrainingService, MockTrainingService>();
 builder.Services.AddSingleton<IMotionRecordService, MockMotionRecordService>();
 builder.Services.AddSingleton<ICheckpointService, MockCheckpointService>();

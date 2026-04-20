@@ -3,6 +3,9 @@ using RobotLearningTool.Application.Interfaces;
 using RobotLearningTool.Infrastructure.Mock;
 
 var builder = WebApplication.CreateBuilder(args);
+var defaultUrls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://localhost:8080";
+
+builder.WebHost.UseUrls(defaultUrls);
 
 builder.Services
     .AddControllers()

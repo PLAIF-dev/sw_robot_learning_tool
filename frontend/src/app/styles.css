@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #dce3ef;
+  background:
+    radial-gradient(circle at top left, rgba(28, 91, 180, 0.28), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(15, 163, 177, 0.18), transparent 26%),
+    #0c1220;
+  font-family: "Segoe UI", "Noto Sans KR", sans-serif;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    linear-gradient(180deg, rgba(7, 12, 24, 0.92), rgba(11, 18, 31, 0.98)),
+    #0c1220;
+  color: #dce3ef;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.panel {
+  @apply rounded-2xl border border-white/10 bg-slate-950/55 shadow-[0_18px_40px_rgba(2,8,23,0.32)] backdrop-blur;
+}
+
+.panel-muted {
+  @apply rounded-xl border border-white/10 bg-white/5;
+}
+
+.section-title {
+  @apply text-xs font-semibold uppercase tracking-[0.24em] text-slate-400;
+}
+
+.metric-value {
+  @apply text-2xl font-semibold text-slate-100;
+}
+
+.stage-button {
+  @apply flex items-center justify-between rounded-xl border px-4 py-3 text-left transition;
+}
+
+.stage-button-active {
+  @apply border-sky-400/60 bg-sky-500/20 text-slate-50;
+}
+
+.stage-button-inactive {
+  @apply border-white/10 bg-white/5 text-slate-300 hover:border-slate-500/40 hover:bg-white/10;
+}

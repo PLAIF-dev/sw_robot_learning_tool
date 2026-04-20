@@ -22,3 +22,6 @@ Thumbs.db
 .idea/
 *.suo
 *.swp
+
+# Codex / OMX local state
+.omc/

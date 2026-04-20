@@ -1,0 +1,36 @@
+import { apiClient, safeGet } from './client'
+import type { Checkpoint } from '../types'
+
+const fallback: Checkpoint[] = [
+  {
+    id: 'ckpt-001',
+    sessionId: 'sess-002',
+    name: 'Checkpoint-01',
+    successRate: 0.65,
+    averageDuration: 5.2,
+    totalEpisodes: 40,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
+    isBaseForAdditional: true,
+  },
+  {
+    id: 'ckpt-002',
+    sessionId: 'sess-002',
+    name: 'Checkpoint-02',
+    successRate: 0.78,
+    averageDuration: 4.8,
+    totalEpisodes: 80,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+    isBaseForAdditional: false,
+  },
+]
+
+export const checkpointsApi = {
+  getAll: () => safeGet<Checkpoint[]>('/checkpoints', fallback),
+  async create(sessionId: string, name: string) {
+    const response = await apiClient.post<Checkpoint>('/checkpoints', { sessionId, name })
+    return response.data
+  },
+  async delete(id: string) {
+    await apiClient.delete(`/checkpoints/${id}`)
+  },
+}

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { useConnectionStore } from '../store/connectionStore'
 
 const rawBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ?? ''
 const apiBaseUrl = rawBaseUrl ? `${rawBaseUrl}/api` : '/api'
@@ -17,8 +18,15 @@ apiClient.interceptors.request.use((config) => {
 })
 
 apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => Promise.reject(error),
+  (response) => {
+    useConnectionStore.getState().setBackendConnected(true)
+    return response
+  },
+  (error) => {
+    const connected = Boolean(error?.response)
+    useConnectionStore.getState().setBackendConnected(connected)
+    return Promise.reject(error)
+  },
 )
 
 export async function safeGet<T>(path: string, fallback: T): Promise<T> {

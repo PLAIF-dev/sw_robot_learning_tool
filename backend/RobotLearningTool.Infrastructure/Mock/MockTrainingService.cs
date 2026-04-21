@@ -94,8 +94,8 @@ public class MockTrainingService : ITrainingService
             Channel = normalizedChannel,
             X = Math.Clamp(roi.X, 0f, 1f),
             Y = Math.Clamp(roi.Y, 0f, 1f),
-            Width = Math.Clamp(roi.Width, 0.05f, 0.9f),
-            Height = Math.Clamp(roi.Height, 0.05f, 0.9f)
+            Width = Math.Clamp(roi.Width, 0.05f, 1f),
+            Height = Math.Clamp(roi.Height, 0.05f, 1f)
         };
 
         clamped.X = Math.Clamp(clamped.X, 0f, 1f - clamped.Width);

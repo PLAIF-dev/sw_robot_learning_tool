@@ -11,7 +11,7 @@ import type {
 } from '../types'
 
 const environmentFallback: TrainingEnvironment = {
-  robotModel: 'RB3 양팔로봇',
+  robotModel: 'RB3 듀얼암 로봇',
   controllerType: '3D Mouse',
   learningRate: 0.001,
   batchSize: 32,
@@ -57,7 +57,7 @@ const evaluationFallback: EvaluationSummary = {
   trainingCompleted: true,
   totalEpisodes: 10,
   successRate: 0.7,
-  nextRecommendedAction: '체크포인트를 저장한 뒤 시연 시나리오를 진행하세요.',
+  nextRecommendedAction: '모델 비교 후 최종 모델을 선택하세요.',
   checkpoints: ['ckpt-001', 'ckpt-002'],
 }
 

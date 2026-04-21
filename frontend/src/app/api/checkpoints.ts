@@ -5,7 +5,7 @@ const fallback: Checkpoint[] = [
   {
     id: 'ckpt-001',
     taskId: 'task-002',
-    name: 'Checkpoint-01',
+    name: '모델 A',
     successRate: 0.65,
     averageDuration: 5.2,
     totalEpisodes: 40,
@@ -15,7 +15,7 @@ const fallback: Checkpoint[] = [
   {
     id: 'ckpt-002',
     taskId: 'task-002',
-    name: 'Checkpoint-02',
+    name: '모델 B',
     successRate: 0.78,
     averageDuration: 4.8,
     totalEpisodes: 80,

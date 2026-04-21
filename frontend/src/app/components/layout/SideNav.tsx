@@ -7,7 +7,7 @@ const items = [
   { to: ROUTES.tasks, label: '작업', icon: Layers3 },
   { to: ROUTES.training, label: '학습 실행', icon: PlayCircle },
   { to: ROUTES.review, label: '기록 검토', icon: BookOpen },
-  { to: ROUTES.checkpoints, label: '모델 / 체크포인트', icon: Archive },
+  { to: ROUTES.checkpoints, label: '저장된 모델', icon: Archive },
   { to: ROUTES.system, label: '시스템', icon: Settings },
 ]
 
@@ -22,7 +22,7 @@ export function SideNav({
         <>
           <div className="mb-6 px-2">
             <div className="text-xs uppercase tracking-[0.3em] text-slate-500">Robot Learning Tool</div>
-            <div className="mt-2 text-lg font-semibold text-slate-100">Task Operations</div>
+            <div className="mt-2 text-lg font-semibold text-slate-100">작업 운영</div>
           </div>
           <nav className="space-y-2">
             {items.map(({ to, label, icon: Icon }) => (

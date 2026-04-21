@@ -54,8 +54,8 @@ export interface DashboardSummary {
 }
 
 export interface TrainingEnvironment {
-  robotModel: 'RB3 양팔로봇' | 'RB5 양팔로봇'
-  controllerType: '3D Mouse' | 'Master Arm' | 'UMI'
+  robotModel: string
+  controllerType: string
   learningRate: number
   batchSize: number
   maxEpisodes: number

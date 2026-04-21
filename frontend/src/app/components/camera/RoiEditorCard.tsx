@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
-import { camerasApi } from '../../api/cameras'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { PointerEvent as ReactPointerEvent } from 'react'
+import { camerasApi, CAMERA_FRAME_INTERVAL_MS } from '../../api/cameras'
 import { CAMERA_CHANNEL_LABELS } from '../../constants'
 import type { CameraChannel, RoiRectangle } from '../../types'
 import { LoadingSpinner } from '../common/LoadingSpinner'
@@ -20,7 +21,7 @@ type DragState = {
 }
 
 export function RoiEditorCard({ channel, roi, connected, onSave }: RoiEditorCardProps) {
-  const [frame, setFrame] = useState<string | null>(null)
+  const [cacheKey, setCacheKey] = useState(0)
   const [loading, setLoading] = useState(true)
   const [draftRoi, setDraftRoi] = useState(roi)
   const [saving, setSaving] = useState(false)
@@ -32,30 +33,22 @@ export function RoiEditorCard({ channel, roi, connected, onSave }: RoiEditorCard
   }, [roi])
 
   useEffect(() => {
-    let alive = true
-
-    async function load() {
-      if (!connected) {
-        setLoading(false)
-        return
-      }
-
-      const nextFrame = await camerasApi.getFrame(channel)
-      if (alive) {
-        setFrame(nextFrame)
-        setLoading(false)
-      }
+    if (!connected) {
+      setLoading(false)
+      return
     }
 
-    void load()
-    const timer = window.setInterval(load, 1200)
-    return () => {
-      alive = false
-      window.clearInterval(timer)
-    }
-  }, [channel, connected])
+    setLoading(true)
+    const timer = window.setInterval(() => {
+      setCacheKey((current) => current + 1)
+    }, CAMERA_FRAME_INTERVAL_MS)
 
-  function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    return () => window.clearInterval(timer)
+  }, [connected, channel])
+
+  const frameUrl = useMemo(() => camerasApi.getFrameUrl(channel, cacheKey), [channel, cacheKey])
+
+  function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
     const container = containerRef.current
     if (!container) {
       return
@@ -72,7 +65,7 @@ export function RoiEditorCard({ channel, roi, connected, onSave }: RoiEditorCard
     event.currentTarget.setPointerCapture(event.pointerId)
   }
 
-  function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
+  function handlePointerMove(event: ReactPointerEvent<HTMLDivElement>) {
     const container = containerRef.current
     const dragState = dragStateRef.current
     if (!container || !dragState || dragState.pointerId !== event.pointerId) {
@@ -90,7 +83,7 @@ export function RoiEditorCard({ channel, roi, connected, onSave }: RoiEditorCard
     }))
   }
 
-  async function handlePointerUp(event: React.PointerEvent<HTMLDivElement>) {
+  async function handlePointerUp(event: ReactPointerEvent<HTMLDivElement>) {
     const dragState = dragStateRef.current
     if (!dragState || dragState.pointerId !== event.pointerId) {
       return
@@ -110,17 +103,21 @@ export function RoiEditorCard({ channel, roi, connected, onSave }: RoiEditorCard
         <div className="text-sm font-semibold text-slate-100">{CAMERA_CHANNEL_LABELS[channel]}</div>
         <div className="text-xs text-slate-400">{saving ? '저장 중...' : '드래그로 이동'}</div>
       </div>
-      <div
-        ref={containerRef}
-        className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80"
-      >
-        {loading ? (
-          <div className="flex h-[220px] items-center justify-center">
+      <div ref={containerRef} className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80">
+        {loading && connected && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-950/35">
             <LoadingSpinner />
           </div>
-        ) : connected && frame ? (
+        )}
+        {connected ? (
           <>
-            <img className="h-[220px] w-full object-cover" src={`data:image/png;base64,${frame}`} alt={CAMERA_CHANNEL_LABELS[channel]} />
+            <img
+              className="h-[220px] w-full object-cover"
+              src={frameUrl}
+              alt={CAMERA_CHANNEL_LABELS[channel]}
+              onLoad={() => setLoading(false)}
+              onError={() => setLoading(false)}
+            />
             <div
               className="absolute border-2 border-amber-300 bg-amber-300/10 shadow-[0_0_0_9999px_rgba(2,6,23,0.28)]"
               style={{

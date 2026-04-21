@@ -8,17 +8,17 @@ public class MockCameraService : ICameraService
     private static readonly IReadOnlyDictionary<string, CameraStatus> DefaultSettings =
         new Dictionary<string, CameraStatus>(StringComparer.OrdinalIgnoreCase)
         {
-            ["left"] = new() { Connected = true, Channel = "left", Width = 640, Height = 480, Fps = 10 },
-            ["right"] = new() { Connected = true, Channel = "right", Width = 640, Height = 480, Fps = 10 },
-            ["head"] = new() { Connected = true, Channel = "head", Width = 1280, Height = 720, Fps = 10 },
+            ["left"] = new() { Connected = true, Channel = "left", Width = 640, Height = 480, Fps = 5 },
+            ["right"] = new() { Connected = true, Channel = "right", Width = 640, Height = 480, Fps = 5 },
+            ["head"] = new() { Connected = true, Channel = "head", Width = 1280, Height = 720, Fps = 5 },
         };
 
-    private static readonly string BluePixel = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
-    private static readonly string GreenPixel = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQAABjE+ibYAAAAASUVORK5CYII=";
-    private static readonly string RedPixel = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg==";
+    private static readonly byte[] BluePixel = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");
+    private static readonly byte[] GreenPixel = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQAABjE+ibYAAAAASUVORK5CYII=");
+    private static readonly byte[] RedPixel = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg==");
 
     private readonly string _framesRootPath;
-    private readonly Dictionary<string, List<string>> _channelFrames;
+    private readonly Dictionary<string, List<CameraFramePayload>> _channelFrames;
     private readonly Dictionary<string, int> _channelFrameIndexes;
     private readonly Dictionary<string, CameraStatus> _settings;
     private readonly Lock _lock = new();
@@ -38,7 +38,7 @@ public class MockCameraService : ICameraService
             },
             StringComparer.OrdinalIgnoreCase);
 
-        _channelFrames = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+        _channelFrames = new Dictionary<string, List<CameraFramePayload>>(StringComparer.OrdinalIgnoreCase);
         _channelFrameIndexes = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var channel in _settings.Keys)
@@ -62,7 +62,7 @@ public class MockCameraService : ICameraService
             })
             .ToList());
 
-    public Task<string> GetFrameBase64Async(string channel)
+    public Task<CameraFramePayload> GetFrameAsync(string channel)
     {
         if (!_channelFrames.TryGetValue(channel, out var frames) || frames.Count == 0)
         {
@@ -74,7 +74,7 @@ public class MockCameraService : ICameraService
             var nextIndex = _channelFrameIndexes[channel];
             var frame = frames[nextIndex];
             _channelFrameIndexes[channel] = (nextIndex + 1) % frames.Count;
-            return Task.FromResult(frame);
+            return Task.FromResult(frame with { FrameIndex = nextIndex });
         }
     }
 
@@ -105,7 +105,7 @@ public class MockCameraService : ICameraService
         return Task.CompletedTask;
     }
 
-    private List<string> LoadChannelFrames(string channel)
+    private List<CameraFramePayload> LoadChannelFrames(string channel)
     {
         var channelDirectory = Path.Combine(_framesRootPath, channel);
         if (!Directory.Exists(channelDirectory))
@@ -127,16 +127,33 @@ public class MockCameraService : ICameraService
             .ToList();
 
         return frameFiles
-            .Select(File.ReadAllBytes)
-            .Select(Convert.ToBase64String)
+            .Select((path, index) => new CameraFramePayload(
+                File.ReadAllBytes(path),
+                GetContentType(path),
+                channel,
+                index))
             .ToList();
     }
 
-    private static string GetFallbackFrame(string channel) =>
-        channel.ToLowerInvariant() switch
+    private static CameraFramePayload GetFallbackFrame(string channel)
+    {
+        var normalized = channel.ToLowerInvariant();
+        var content = normalized switch
         {
             "right" => GreenPixel,
             "head" => RedPixel,
             _ => BluePixel,
+        };
+
+        return new CameraFramePayload(content, "image/png", normalized, 0);
+    }
+
+    private static string GetContentType(string path) =>
+        Path.GetExtension(path).ToLowerInvariant() switch
+        {
+            ".jpg" => "image/jpeg",
+            ".jpeg" => "image/jpeg",
+            ".webp" => "image/webp",
+            _ => "image/png",
         };
 }

@@ -21,27 +21,16 @@ public class CamerasController : ControllerBase
     }
 
     [HttpGet("{channel}/frame")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     public async Task<IActionResult> GetFrame(string channel)
     {
-        var frame = await _cameraService.GetFrameBase64Async(channel);
-        return Ok(new
-        {
-            channel,
-            frame,
-            timestamp = DateTimeOffset.UtcNow
-        });
-    }
-
-    [HttpGet("{channel}/frames")]
-    public async Task<IActionResult> GetFrames(string channel)
-    {
-        var frame = await _cameraService.GetFrameBase64Async(channel);
-        return Ok(Enumerable.Range(0, 6).Select(index => new
-        {
-            channel,
-            frame,
-            timestamp = DateTimeOffset.UtcNow.AddMilliseconds(-index * 250)
-        }));
+        var frame = await _cameraService.GetFrameAsync(channel);
+        Response.Headers.CacheControl = "no-store, no-cache, must-revalidate";
+        Response.Headers.Pragma = "no-cache";
+        Response.Headers.Expires = "0";
+        Response.Headers["X-Frame-Index"] = frame.FrameIndex.ToString();
+        Response.Headers["X-Frame-Channel"] = frame.Channel;
+        return File(frame.Content, frame.ContentType);
     }
 
     [HttpGet("{channel}/settings")]
@@ -54,7 +43,7 @@ public class CamerasController : ControllerBase
     public async Task<IActionResult> UpdateSettings(string channel, [FromBody] UpdateSettingsRequest request)
     {
         await _cameraService.UpdateSettingsAsync(channel, request.Width, request.Height, request.Fps);
-        return Ok(new { message = "채널 설정을 저장했습니다." });
+        return Ok(new { message = "카메라 설정을 업데이트했습니다." });
     }
 
     public record UpdateSettingsRequest(int Width, int Height, int Fps);

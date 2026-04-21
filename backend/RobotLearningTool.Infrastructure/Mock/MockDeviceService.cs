@@ -29,9 +29,9 @@ public class MockDeviceService : IDeviceService
                 Connected = true,
                 State = "연결됨"
             },
-            LeftCamera = new CameraStatus { Connected = true, Channel = "left", Width = 640, Height = 480, Fps = 30 },
-            RightCamera = new CameraStatus { Connected = true, Channel = "right", Width = 640, Height = 480, Fps = 30 },
-            HeadCamera = new CameraStatus { Connected = true, Channel = "head", Width = 1280, Height = 720, Fps = 15 },
+            LeftCamera = new CameraStatus { Connected = true, Channel = "left", Width = 640, Height = 480, Fps = 5 },
+            RightCamera = new CameraStatus { Connected = true, Channel = "right", Width = 640, Height = 480, Fps = 5 },
+            HeadCamera = new CameraStatus { Connected = true, Channel = "head", Width = 1280, Height = 720, Fps = 5 },
             LeftGripper = new GripperStatus { Connected = true, OpenPercent = 82 },
             RightGripper = new GripperStatus { Connected = true, OpenPercent = 61 }
         });

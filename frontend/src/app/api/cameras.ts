@@ -1,11 +1,10 @@
-import { safeGet } from './client'
 import type { CameraChannel } from '../types'
 
-const fallbackFrame = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+export const CAMERA_FPS = 5
+export const CAMERA_FRAME_INTERVAL_MS = Math.round(1000 / CAMERA_FPS)
 
 export const camerasApi = {
-  async getFrame(channel: CameraChannel) {
-    const response = await safeGet<{ frame: string }>(`/cameras/${channel}/frame`, { frame: fallbackFrame })
-    return response.frame
+  getFrameUrl(channel: CameraChannel, cacheKey: number) {
+    return `/api/cameras/${channel}/frame?v=${cacheKey}`
   },
 }

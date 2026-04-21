@@ -37,7 +37,7 @@ builder.Services.AddSingleton<IAuthService>(_ =>
 builder.Services.AddSingleton<ITaskService, MockTaskService>();
 builder.Services.AddSingleton<IDeviceService, MockDeviceService>();
 builder.Services.AddSingleton<ICameraService>(_ =>
-    new MockCameraService(Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", "robot_mock_frames"))));
+    new MockCameraService(Path.Combine(builder.Environment.ContentRootPath, "MockAssets", "camera-frames")));
 builder.Services.AddSingleton<ITrainingService, MockTrainingService>();
 builder.Services.AddSingleton<IMotionRecordService, MockMotionRecordService>();
 builder.Services.AddSingleton<ICheckpointService, MockCheckpointService>();

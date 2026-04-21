@@ -25,7 +25,7 @@ public class CheckpointsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateCheckpointDto request)
     {
-        var checkpoint = await _checkpointService.CreateAsync(request.SessionId, request.Name);
+        var checkpoint = await _checkpointService.CreateAsync(request.TaskId, request.Name);
         return CreatedAtAction(nameof(GetById), new { id = checkpoint.Id }, ToDto(checkpoint));
     }
 
@@ -51,7 +51,7 @@ public class CheckpointsController : ControllerBase
     private static CheckpointDto ToDto(Domain.Models.Checkpoint checkpoint) =>
         new(
             checkpoint.Id,
-            checkpoint.SessionId,
+            checkpoint.TaskId,
             checkpoint.Name,
             checkpoint.SuccessRate,
             checkpoint.AverageDuration,

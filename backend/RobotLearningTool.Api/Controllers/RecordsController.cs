@@ -20,7 +20,7 @@ public class RecordsController : ControllerBase
     [HttpPost("motion/start")]
     public async Task<IActionResult> StartMotion([FromBody] StartRecordingDto request)
     {
-        var record = await _motionRecordService.StartRecordingAsync(request.SessionId, request.Type, request.Target);
+        var record = await _motionRecordService.StartRecordingAsync(request.TaskId, request.Type, request.Target);
         return Ok(ToMotionDto(record));
     }
 
@@ -39,9 +39,9 @@ public class RecordsController : ControllerBase
     }
 
     [HttpGet("motion")]
-    public async Task<IActionResult> GetMotion([FromQuery] string? sessionId = null)
+    public async Task<IActionResult> GetMotion([FromQuery] string? taskId = null)
     {
-        var records = await _motionRecordService.GetAllAsync(sessionId);
+        var records = await _motionRecordService.GetAllAsync(taskId);
         return Ok(records.Select(ToMotionDto));
     }
 
@@ -81,7 +81,7 @@ public class RecordsController : ControllerBase
     public async Task<IActionResult> GetDemos()
     {
         var demos = await _trainingService.GetDemosAsync();
-        return Ok(demos.Select(item => new DemoRecordDto(item.Id, item.SessionId, item.StartedAt, item.EndedAt, item.MarkedSuccess)));
+        return Ok(demos.Select(item => new DemoRecordDto(item.Id, item.TaskId, item.StartedAt, item.EndedAt, item.MarkedSuccess)));
     }
 
     [HttpGet("demos/{id}")]
@@ -93,7 +93,7 @@ public class RecordsController : ControllerBase
             return NotFound(RecordNotFound());
         }
 
-        return Ok(new DemoRecordDto(demo.Id, demo.SessionId, demo.StartedAt, demo.EndedAt, demo.MarkedSuccess));
+        return Ok(new DemoRecordDto(demo.Id, demo.TaskId, demo.StartedAt, demo.EndedAt, demo.MarkedSuccess));
     }
 
     [HttpGet("demos/{id}/playback")]
@@ -119,7 +119,7 @@ public class RecordsController : ControllerBase
     public async Task<IActionResult> GetEpisodes()
     {
         var episodes = await _trainingService.GetEpisodesAsync();
-        return Ok(episodes.Select(item => new EpisodeRecordDto(item.Id, item.SessionId, item.EpisodeNumber, item.Success, item.DurationSeconds, item.StartedAt, item.Notes)));
+        return Ok(episodes.Select(item => new EpisodeRecordDto(item.Id, item.TaskId, item.EpisodeNumber, item.Success, item.DurationSeconds, item.StartedAt, item.Notes)));
     }
 
     [HttpGet("episodes/{id}")]
@@ -131,7 +131,7 @@ public class RecordsController : ControllerBase
             return NotFound(RecordNotFound());
         }
 
-        return Ok(new EpisodeRecordDto(episode.Id, episode.SessionId, episode.EpisodeNumber, episode.Success, episode.DurationSeconds, episode.StartedAt, episode.Notes));
+        return Ok(new EpisodeRecordDto(episode.Id, episode.TaskId, episode.EpisodeNumber, episode.Success, episode.DurationSeconds, episode.StartedAt, episode.Notes));
     }
 
     [HttpGet("episodes/{id}/playback")]
@@ -174,7 +174,7 @@ public class RecordsController : ControllerBase
         return Ok(interventions.Select(item => new
         {
             item.Id,
-            item.SessionId,
+            taskId = item.TaskId,
             item.EpisodeId,
             createdAt = item.OccurredAt,
             item.Reason,
@@ -194,7 +194,7 @@ public class RecordsController : ControllerBase
         return Ok(new
         {
             intervention.Id,
-            intervention.SessionId,
+            taskId = intervention.TaskId,
             intervention.EpisodeId,
             createdAt = intervention.OccurredAt,
             intervention.Reason,
@@ -215,7 +215,7 @@ public class RecordsController : ControllerBase
     }
 
     private static MotionRecordDto ToMotionDto(Domain.Models.MotionRecord record) =>
-        new(record.Id, record.SessionId, record.Type, record.Target, record.StartedAt, record.EndedAt, record.Frames.Count);
+        new(record.Id, record.TaskId, record.Type, record.Target, record.StartedAt, record.EndedAt, record.Frames.Count);
 
     private static object RecordNotFound() => new
     {

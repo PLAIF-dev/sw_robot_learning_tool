@@ -32,7 +32,7 @@ export function LoginPage() {
           </p>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {[
-              ['세션 중심 운영', '대시보드부터 평가까지 단일 흐름으로 검증'],
+              ['작업 중심 운영', '대시보드부터 평가까지 단일 흐름으로 검증'],
               ['상시 TCP 제어', '우측 패널에서 양팔 수동 조작과 IK 상태 확인'],
               ['Mock 시연 가능', 'API 일부가 미완성이어도 fallback 데이터로 진행'],
             ].map(([title, body]) => (

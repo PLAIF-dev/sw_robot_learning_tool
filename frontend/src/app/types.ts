@@ -1,4 +1,4 @@
-export type SessionMode = 'NewTraining' | 'AdditionalTraining'
+export type TaskMode = 'NewTraining' | 'AdditionalTraining'
 export type TrainingStage = 'Environment' | 'Roi' | 'Classifier' | 'Demo' | 'MainTraining' | 'Evaluation'
 export type TcpTarget = 'left' | 'right' | 'both'
 export type ControlMode = 'move' | 'rotate'
@@ -6,10 +6,10 @@ export type CoordFrame = 'world' | 'local'
 export type CameraChannel = 'left' | 'right' | 'head'
 export type ReviewTab = 'motion' | 'demos' | 'episodes' | 'interventions'
 
-export interface Session {
+export interface TaskItem {
   id: string
   name: string
-  mode: SessionMode
+  mode: TaskMode
   description: string
   currentStage: TrainingStage
   isActive: boolean
@@ -39,8 +39,8 @@ export interface DeviceStatus {
 }
 
 export interface DashboardSummary {
-  activeSession: Pick<Session, 'id' | 'name' | 'mode' | 'currentStage' | 'isActive' | 'createdAt'> | null
-  recentSessions: Array<Pick<Session, 'id' | 'name' | 'mode' | 'currentStage' | 'isActive' | 'createdAt'>>
+  activeTask: Pick<TaskItem, 'id' | 'name' | 'mode' | 'currentStage' | 'isActive' | 'createdAt'> | null
+  recentTasks: Array<Pick<TaskItem, 'id' | 'name' | 'mode' | 'currentStage' | 'isActive' | 'createdAt'>>
   deviceSummary: {
     leftArmConnected: boolean
     rightArmConnected: boolean
@@ -80,7 +80,7 @@ export interface ClassifierStatus {
 
 export interface DemoRecord {
   id: string
-  sessionId: string
+  taskId: string
   startedAt: string
   endedAt?: string | null
   markedSuccess?: boolean | null
@@ -95,7 +95,7 @@ export interface DemoStatus {
 
 export interface EpisodeRecord {
   id: string
-  sessionId: string
+  taskId: string
   episodeNumber: number
   success?: boolean | null
   durationSeconds?: number | null
@@ -126,7 +126,7 @@ export interface EvaluationSummary {
 
 export interface MotionRecord {
   id: string
-  sessionId: string
+  taskId: string
   type: string
   target: string
   startedAt: string
@@ -144,7 +144,7 @@ export interface PlaybackFrame {
 
 export interface Checkpoint {
   id: string
-  sessionId: string
+  taskId: string
   name: string
   successRate: number
   averageDuration: number
@@ -155,7 +155,7 @@ export interface Checkpoint {
 
 export interface InterventionRecord {
   id: string
-  sessionId: string
+  taskId: string
   episodeId?: string
   createdAt: string
   reason: string

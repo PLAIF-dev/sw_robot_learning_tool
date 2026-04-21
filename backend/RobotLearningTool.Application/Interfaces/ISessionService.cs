@@ -2,12 +2,12 @@ using RobotLearningTool.Domain.Models;
 
 namespace RobotLearningTool.Application.Interfaces;
 
-public interface ISessionService
+public interface ITaskService
 {
-    Task<List<Session>> GetAllAsync();
-    Task<Session?> GetByIdAsync(string id);
-    Task<Session> CreateAsync(string name, SessionMode mode, string description, string? baseCheckpointId);
-    Task<Session> UpdateAsync(string id, string name, string description);
-    Task<Session> DuplicateAsync(string id);
+    Task<List<TaskItem>> GetAllAsync();
+    Task<TaskItem?> GetByIdAsync(string id);
+    Task<TaskItem> CreateAsync(string name, TaskMode mode, string description, string? baseCheckpointId);
+    Task<TaskItem> UpdateAsync(string id, string name, string description);
+    Task<TaskItem> DuplicateAsync(string id);
     Task SetActiveAsync(string id);
 }

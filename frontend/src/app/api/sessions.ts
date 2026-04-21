@@ -1,22 +1,22 @@
 import { apiClient, safeGet } from './client'
-import type { Session, SessionMode } from '../types'
+import type { TaskItem, TaskMode } from '../types'
 
-const fallbackSessions: Session[] = [
+const fallbackTasks: TaskItem[] = [
   {
-    id: 'sess-001',
+    id: 'task-001',
     name: 'Cup Pick Task v1',
     mode: 'NewTraining',
-    description: '컵 집기 작업 초기 학습 세션',
+    description: '컵 집기 작업 초기 학습 작업',
     currentStage: 'Environment',
     isActive: false,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 4).toISOString(),
     updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
   },
   {
-    id: 'sess-002',
+    id: 'task-002',
     name: 'Sorting Task Demo',
     mode: 'NewTraining',
-    description: '분류 시연용 메인 세션',
+    description: '분류 시연용 메인 작업',
     currentStage: 'Evaluation',
     isActive: true,
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
@@ -24,20 +24,20 @@ const fallbackSessions: Session[] = [
   },
 ]
 
-export const sessionsApi = {
-  getAll: () => safeGet<Session[]>('/sessions', fallbackSessions),
+export const tasksApi = {
+  getAll: () => safeGet<TaskItem[]>('/tasks', fallbackTasks),
 
-  async create(payload: { name: string; mode: SessionMode; description: string; baseCheckpointId?: string }): Promise<Session> {
-    const response = await apiClient.post<Session>('/sessions', payload)
+  async create(payload: { name: string; mode: TaskMode; description: string; baseCheckpointId?: string }): Promise<TaskItem> {
+    const response = await apiClient.post<TaskItem>('/tasks', payload)
     return response.data
   },
 
-  async duplicate(id: string): Promise<Session> {
-    const response = await apiClient.post<Session>(`/sessions/${id}/duplicate`)
+  async duplicate(id: string): Promise<TaskItem> {
+    const response = await apiClient.post<TaskItem>(`/tasks/${id}/duplicate`)
     return response.data
   },
 
   async activate(id: string): Promise<void> {
-    await apiClient.post(`/sessions/${id}/activate`)
+    await apiClient.post(`/tasks/${id}/activate`)
   },
 }

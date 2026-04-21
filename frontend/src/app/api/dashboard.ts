@@ -2,17 +2,17 @@ import { safeGet } from './client'
 import type { DashboardSummary } from '../types'
 
 const fallback: DashboardSummary = {
-  activeSession: {
-    id: 'sess-002',
+  activeTask: {
+    id: 'task-002',
     name: 'Sorting Task Demo',
     mode: 'NewTraining',
     currentStage: 'Evaluation',
     isActive: true,
     createdAt: new Date().toISOString(),
   },
-  recentSessions: [
+  recentTasks: [
     {
-      id: 'sess-002',
+      id: 'task-002',
       name: 'Sorting Task Demo',
       mode: 'NewTraining',
       currentStage: 'Evaluation',
@@ -28,7 +28,7 @@ const fallback: DashboardSummary = {
   },
   latestCheckpoint: {
     id: 'ckpt-002',
-    sessionId: 'sess-002',
+    taskId: 'task-002',
     name: 'Checkpoint-02',
     successRate: 0.78,
     averageDuration: 4.8,

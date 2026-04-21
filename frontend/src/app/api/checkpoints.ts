@@ -4,7 +4,7 @@ import type { Checkpoint } from '../types'
 const fallback: Checkpoint[] = [
   {
     id: 'ckpt-001',
-    sessionId: 'sess-002',
+    taskId: 'task-002',
     name: 'Checkpoint-01',
     successRate: 0.65,
     averageDuration: 5.2,
@@ -14,7 +14,7 @@ const fallback: Checkpoint[] = [
   },
   {
     id: 'ckpt-002',
-    sessionId: 'sess-002',
+    taskId: 'task-002',
     name: 'Checkpoint-02',
     successRate: 0.78,
     averageDuration: 4.8,
@@ -26,8 +26,8 @@ const fallback: Checkpoint[] = [
 
 export const checkpointsApi = {
   getAll: () => safeGet<Checkpoint[]>('/checkpoints', fallback),
-  async create(sessionId: string, name: string) {
-    const response = await apiClient.post<Checkpoint>('/checkpoints', { sessionId, name })
+  async create(taskId: string, name: string) {
+    const response = await apiClient.post<Checkpoint>('/checkpoints', { taskId, name })
     return response.data
   },
   async delete(id: string) {

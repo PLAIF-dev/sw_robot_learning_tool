@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { FRAME_LABELS, TARGET_LABELS } from '../../constants'
 import type { ControlMode, CoordFrame, TcpTarget } from '../../types'
 import { useControlStore } from '../../store/controlStore'
-import { useSessionStore } from '../../store/sessionStore'
+import { useTaskStore } from '../../store/sessionStore'
 import { StatusBadge } from '../common/StatusBadge'
 import { KeyboardHelpModal } from './KeyboardHelpModal'
 
@@ -27,21 +27,21 @@ export function TcpControlPanel() {
     startRecording,
     stopRecording,
   } = useControlStore()
-  const activeSession = useSessionStore((state) => state.activeSession)
+  const activeTask = useTaskStore((state) => state.activeTask)
   const [helpOpen, setHelpOpen] = useState(false)
 
   const pose = target === 'right' ? rightTcpPose : leftTcpPose
   const joints = target === 'right' ? rightJoints : leftJoints
 
   async function handleRecording() {
-    if (!activeSession) {
+    if (!activeTask) {
       return
     }
 
     if (recordingId) {
       await stopRecording()
     } else {
-      await startRecording(activeSession.id)
+      await startRecording(activeTask.id)
     }
   }
 

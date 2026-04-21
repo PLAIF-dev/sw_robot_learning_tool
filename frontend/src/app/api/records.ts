@@ -4,7 +4,7 @@ import type { DemoRecord, EpisodeRecord, InterventionRecord, MotionRecord, Playb
 const motionFallback: MotionRecord[] = [
   {
     id: 'mr-001',
-    sessionId: 'sess-002',
+    taskId: 'task-002',
     type: 'demo',
     target: 'both',
     startedAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
@@ -24,8 +24,8 @@ const playbackFallback: PlaybackFrame[] = Array.from({ length: 24 }, (_, index) 
 export const recordsApi = {
   getMotion: () => safeGet<MotionRecord[]>('/records/motion', motionFallback),
   getMotionPlayback: (id: string) => safeGet<PlaybackFrame[]>(`/records/motion/${id}/playback`, playbackFallback),
-  async startRecording(sessionId: string, type: string, target: string) {
-    const response = await apiClient.post<MotionRecord>('/records/motion/start', { sessionId, type, target })
+  async startRecording(taskId: string, type: string, target: string) {
+    const response = await apiClient.post<MotionRecord>('/records/motion/start', { taskId, type, target })
     return response.data
   },
   async stopRecording(id: string) {

@@ -4,7 +4,7 @@ import { ROUTES } from '../../constants'
 
 const items = [
   { to: ROUTES.dashboard, label: '대시보드', icon: Gauge },
-  { to: ROUTES.sessions, label: '세션', icon: Layers3 },
+  { to: ROUTES.tasks, label: '작업', icon: Layers3 },
   { to: ROUTES.training, label: '학습 실행', icon: PlayCircle },
   { to: ROUTES.review, label: '기록 검토', icon: BookOpen },
   { to: ROUTES.checkpoints, label: '모델 / 체크포인트', icon: Archive },
@@ -16,7 +16,7 @@ export function SideNav() {
     <aside className="w-64 shrink-0 border-r border-white/10 bg-slate-950/50 p-4">
       <div className="mb-6 px-2">
         <div className="text-xs uppercase tracking-[0.3em] text-slate-500">Robot Learning Tool</div>
-        <div className="mt-2 text-lg font-semibold text-slate-100">Session Operations</div>
+        <div className="mt-2 text-lg font-semibold text-slate-100">Task Operations</div>
       </div>
       <nav className="space-y-2">
         {items.map(({ to, label, icon: Icon }) => (

@@ -28,10 +28,10 @@ public class MockTrainingService : ITrainingService
 
     private readonly List<DemoRecord> _demos =
     [
-        new() { Id = "demo-001", SessionId = "sess-002", StartedAt = DateTime.UtcNow.AddHours(-8), EndedAt = DateTime.UtcNow.AddHours(-8).AddMinutes(2), MarkedSuccess = true, MotionRecordId = "mr-001" },
-        new() { Id = "demo-002", SessionId = "sess-002", StartedAt = DateTime.UtcNow.AddHours(-7), EndedAt = DateTime.UtcNow.AddHours(-7).AddMinutes(3), MarkedSuccess = true, MotionRecordId = "mr-001" },
-        new() { Id = "demo-003", SessionId = "sess-002", StartedAt = DateTime.UtcNow.AddHours(-6), EndedAt = DateTime.UtcNow.AddHours(-6).AddMinutes(2), MarkedSuccess = false, MotionRecordId = "mr-002" },
-        new() { Id = "demo-004", SessionId = "sess-002", StartedAt = DateTime.UtcNow.AddHours(-5), EndedAt = DateTime.UtcNow.AddHours(-5).AddMinutes(3), MarkedSuccess = true, MotionRecordId = "mr-002" }
+        new() { Id = "demo-001", TaskId = "task-002", StartedAt = DateTime.UtcNow.AddHours(-8), EndedAt = DateTime.UtcNow.AddHours(-8).AddMinutes(2), MarkedSuccess = true, MotionRecordId = "mr-001" },
+        new() { Id = "demo-002", TaskId = "task-002", StartedAt = DateTime.UtcNow.AddHours(-7), EndedAt = DateTime.UtcNow.AddHours(-7).AddMinutes(3), MarkedSuccess = true, MotionRecordId = "mr-001" },
+        new() { Id = "demo-003", TaskId = "task-002", StartedAt = DateTime.UtcNow.AddHours(-6), EndedAt = DateTime.UtcNow.AddHours(-6).AddMinutes(2), MarkedSuccess = false, MotionRecordId = "mr-002" },
+        new() { Id = "demo-004", TaskId = "task-002", StartedAt = DateTime.UtcNow.AddHours(-5), EndedAt = DateTime.UtcNow.AddHours(-5).AddMinutes(3), MarkedSuccess = true, MotionRecordId = "mr-002" }
     ];
 
     private readonly List<EpisodeRecord> _episodes;
@@ -41,7 +41,7 @@ public class MockTrainingService : ITrainingService
         new()
         {
             Id = "intv-001",
-            SessionId = "sess-002",
+            TaskId = "task-002",
             EpisodeId = "ep-003",
             OccurredAt = DateTime.UtcNow.AddHours(-4),
             Reason = "그리퍼 미세 조정",
@@ -56,7 +56,7 @@ public class MockTrainingService : ITrainingService
             .Select(index => new EpisodeRecord
             {
                 Id = $"ep-{index:D3}",
-                SessionId = "sess-002",
+                TaskId = "task-002",
                 EpisodeNumber = index,
                 Success = index % 4 != 0,
                 DurationSeconds = 4f + (float)random.NextDouble() * 3.5f,
@@ -82,10 +82,7 @@ public class MockTrainingService : ITrainingService
         return Task.CompletedTask;
     }
 
-    public Task<List<RoiRectangle>> GetRoiSettingsAsync() =>
-        Task.FromResult(_roiSettings
-            .Select(CloneRoi)
-            .ToList());
+    public Task<List<RoiRectangle>> GetRoiSettingsAsync() => Task.FromResult(_roiSettings.Select(CloneRoi).ToList());
 
     public Task<RoiRectangle> SaveRoiSettingAsync(string channel, RoiRectangle roi)
     {
@@ -95,8 +92,8 @@ public class MockTrainingService : ITrainingService
         var clamped = new RoiRectangle
         {
             Channel = normalizedChannel,
-            X = Clamp01(roi.X),
-            Y = Clamp01(roi.Y),
+            X = Math.Clamp(roi.X, 0f, 1f),
+            Y = Math.Clamp(roi.Y, 0f, 1f),
             Width = Math.Clamp(roi.Width, 0.05f, 0.9f),
             Height = Math.Clamp(roi.Height, 0.05f, 0.9f)
         };
@@ -107,16 +104,14 @@ public class MockTrainingService : ITrainingService
         if (existing is null)
         {
             _roiSettings.Add(clamped);
-        }
-        else
-        {
-            existing.X = clamped.X;
-            existing.Y = clamped.Y;
-            existing.Width = clamped.Width;
-            existing.Height = clamped.Height;
+            return Task.FromResult(CloneRoi(clamped));
         }
 
-        return Task.FromResult(CloneRoi(existing ?? clamped));
+        existing.X = clamped.X;
+        existing.Y = clamped.Y;
+        existing.Width = clamped.Width;
+        existing.Height = clamped.Height;
+        return Task.FromResult(CloneRoi(existing));
     }
 
     public Task<ClassifierStatus> GetClassifierStatusAsync() => Task.FromResult(_classifier);
@@ -147,15 +142,8 @@ public class MockTrainingService : ITrainingService
         return Task.CompletedTask;
     }
 
-    public Task<DemoStatus> GetDemoStatusAsync()
-    {
-        return Task.FromResult(new DemoStatus
-        {
-            DemoCount = _demos.Count,
-            IsRecording = _isDemoRecording,
-            Demos = _demos.ToList()
-        });
-    }
+    public Task<DemoStatus> GetDemoStatusAsync() =>
+        Task.FromResult(new DemoStatus { DemoCount = _demos.Count, IsRecording = _isDemoRecording, Demos = _demos.ToList() });
 
     public Task StartDemoAsync()
     {
@@ -180,13 +168,12 @@ public class MockTrainingService : ITrainingService
         _demos.Add(new DemoRecord
         {
             Id = $"demo-{Guid.NewGuid().ToString("N")[..8]}",
-            SessionId = "sess-002",
+            TaskId = "task-002",
             StartedAt = DateTime.UtcNow.AddMinutes(-2),
             EndedAt = DateTime.UtcNow,
             MarkedSuccess = null,
             MotionRecordId = "mr-001"
         });
-
         return Task.CompletedTask;
     }
 
@@ -230,7 +217,7 @@ public class MockTrainingService : ITrainingService
         _episodes.Add(new EpisodeRecord
         {
             Id = $"ep-{Guid.NewGuid().ToString("N")[..8]}",
-            SessionId = "sess-002",
+            TaskId = "task-002",
             EpisodeNumber = _episodes.Count + 1,
             Success = success,
             DurationSeconds = 3.5f + Random.Shared.NextSingle() * 4f,
@@ -252,12 +239,11 @@ public class MockTrainingService : ITrainingService
         var successCount = _episodes.Count(item => item.Success == true);
         var successRate = _episodes.Count == 0 ? 0 : (float)successCount / _episodes.Count;
         var trainingCompleted = _episodes.Count >= 10 && successRate >= 0.6f;
-        var roiConfigured = _roiSettings.Count == 3;
 
         return Task.FromResult(new EvaluationSummary
         {
             EnvironmentConfigured = true,
-            RoiConfigured = roiConfigured,
+            RoiConfigured = _roiSettings.Count == 3,
             ClassifierTrained = _classifier.CanProceed,
             DemoCollected = _demos.Count >= 3,
             TrainingCompleted = trainingCompleted,
@@ -271,39 +257,22 @@ public class MockTrainingService : ITrainingService
     }
 
     public Task<List<DemoRecord>> GetDemosAsync() => Task.FromResult(_demos.ToList());
-
-    public Task<DemoRecord?> GetDemoByIdAsync(string id) =>
-        Task.FromResult(_demos.FirstOrDefault(item => item.Id == id));
-
+    public Task<DemoRecord?> GetDemoByIdAsync(string id) => Task.FromResult(_demos.FirstOrDefault(item => item.Id == id));
     public Task<List<EpisodeRecord>> GetEpisodesAsync() => Task.FromResult(_episodes.ToList());
-
-    public Task<EpisodeRecord?> GetEpisodeByIdAsync(string id) =>
-        Task.FromResult(_episodes.FirstOrDefault(item => item.Id == id));
+    public Task<EpisodeRecord?> GetEpisodeByIdAsync(string id) => Task.FromResult(_episodes.FirstOrDefault(item => item.Id == id));
 
     public Task UpdateEpisodeAsync(string id, bool? success, string? notes)
     {
         var episode = _episodes.FirstOrDefault(item => item.Id == id)
             ?? throw new InvalidOperationException("Episode not found.");
-
         episode.Success = success ?? episode.Success;
         episode.Notes = notes ?? episode.Notes;
         return Task.CompletedTask;
     }
 
     public Task<List<InterventionRecord>> GetInterventionsAsync() => Task.FromResult(_interventions.ToList());
-
-    public Task<InterventionRecord?> GetInterventionByIdAsync(string id) =>
-        Task.FromResult(_interventions.FirstOrDefault(item => item.Id == id));
+    public Task<InterventionRecord?> GetInterventionByIdAsync(string id) => Task.FromResult(_interventions.FirstOrDefault(item => item.Id == id));
 
     private static RoiRectangle CloneRoi(RoiRectangle roi) =>
-        new()
-        {
-            Channel = roi.Channel,
-            X = roi.X,
-            Y = roi.Y,
-            Width = roi.Width,
-            Height = roi.Height
-        };
-
-    private static float Clamp01(float value) => Math.Clamp(value, 0f, 1f);
+        new() { Channel = roi.Channel, X = roi.X, Y = roi.Y, Width = roi.Width, Height = roi.Height };
 }

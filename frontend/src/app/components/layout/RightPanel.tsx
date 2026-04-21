@@ -1,7 +1,7 @@
 import { TRAINING_STAGE_LABELS } from '../../constants'
 import { useControlStore } from '../../store/controlStore'
 import { useDeviceStore } from '../../store/deviceStore'
-import { useSessionStore } from '../../store/sessionStore'
+import { useTaskStore } from '../../store/sessionStore'
 import { StatusBadge } from '../common/StatusBadge'
 
 function StatusRow({ label, online, detail }: { label: string; online: boolean; detail?: string }) {
@@ -18,7 +18,7 @@ function StatusRow({ label, online, detail }: { label: string; online: boolean; 
 
 export function RightPanel() {
   const deviceStatus = useDeviceStore((state) => state.status)
-  const activeSession = useSessionStore((state) => state.activeSession)
+  const activeTask = useTaskStore((state) => state.activeTask)
   const ikSuccess = useControlStore((state) => state.ikSuccess)
 
   return (
@@ -45,20 +45,20 @@ export function RightPanel() {
         </section>
 
         <section className="panel p-4">
-          <div className="section-title">현재 세션 / 단계</div>
+          <div className="section-title">현재 작업 / 단계</div>
           <div className="mt-3 space-y-2">
-            {activeSession ? (
+            {activeTask ? (
               <>
-                <div className="text-sm font-semibold text-slate-100">{activeSession.name}</div>
+                <div className="text-sm font-semibold text-slate-100">{activeTask.name}</div>
                 <div className="flex gap-2">
-                  <StatusBadge tone={activeSession.mode === 'NewTraining' ? 'info' : 'warning'}>
-                    {activeSession.mode === 'NewTraining' ? '신규 학습' : '추가 학습'}
+                  <StatusBadge tone={activeTask.mode === 'NewTraining' ? 'info' : 'warning'}>
+                    {activeTask.mode === 'NewTraining' ? '신규 작업' : '추가 작업'}
                   </StatusBadge>
-                  <StatusBadge>{TRAINING_STAGE_LABELS[activeSession.currentStage]}</StatusBadge>
+                  <StatusBadge>{TRAINING_STAGE_LABELS[activeTask.currentStage]}</StatusBadge>
                 </div>
               </>
             ) : (
-              <div className="text-sm text-slate-400">활성 세션을 선택해 주세요.</div>
+              <div className="text-sm text-slate-400">활성 작업을 선택해 주세요.</div>
             )}
             {ikSuccess !== null && <StatusBadge tone={ikSuccess ? 'success' : 'danger'}>{ikSuccess ? 'IK 정상' : 'IK 실패'}</StatusBadge>}
           </div>

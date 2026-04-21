@@ -9,18 +9,18 @@ namespace RobotLearningTool.Api.Controllers;
 [Route("api/dashboard")]
 public class DashboardController : ControllerBase
 {
-    private readonly ISessionService _sessionService;
+    private readonly ITaskService _taskService;
     private readonly IDeviceService _deviceService;
     private readonly ICheckpointService _checkpointService;
     private readonly ITrainingService _trainingService;
 
     public DashboardController(
-        ISessionService sessionService,
+        ITaskService taskService,
         IDeviceService deviceService,
         ICheckpointService checkpointService,
         ITrainingService trainingService)
     {
-        _sessionService = sessionService;
+        _taskService = taskService;
         _deviceService = deviceService;
         _checkpointService = checkpointService;
         _trainingService = trainingService;
@@ -29,12 +29,12 @@ public class DashboardController : ControllerBase
     [HttpGet("summary")]
     public async Task<IActionResult> GetSummary()
     {
-        var sessions = await _sessionService.GetAllAsync();
-        var activeSession = sessions.FirstOrDefault(item => item.IsActive);
-        var recentSessions = sessions
+        var tasks = await _taskService.GetAllAsync();
+        var activeTask = tasks.FirstOrDefault(item => item.IsActive);
+        var recentTasks = tasks
             .OrderByDescending(item => item.UpdatedAt)
             .Take(3)
-            .Select(ToSessionSummary)
+            .Select(ToTaskSummary)
             .ToList();
 
         var deviceStatus = await _deviceService.GetStatusAsync();
@@ -45,20 +45,20 @@ public class DashboardController : ControllerBase
 
         return Ok(new
         {
-            activeSession = activeSession is null ? null : ToSessionSummary(activeSession),
-            recentSessions,
+            activeTask = activeTask is null ? null : ToTaskSummary(activeTask),
+            recentTasks,
             deviceSummary = new
             {
-                LeftArmConnected = deviceStatus.LeftArm.Connected,
-                RightArmConnected = deviceStatus.RightArm.Connected,
-                ControllerConnected = deviceStatus.Controller.Connected,
-                CameraConnectedCount = new[] { deviceStatus.LeftCamera, deviceStatus.RightCamera, deviceStatus.HeadCamera }.Count(item => item.Connected)
+                leftArmConnected = deviceStatus.LeftArm.Connected,
+                rightArmConnected = deviceStatus.RightArm.Connected,
+                controllerConnected = deviceStatus.Controller.Connected,
+                cameraConnectedCount = new[] { deviceStatus.LeftCamera, deviceStatus.RightCamera, deviceStatus.HeadCamera }.Count(item => item.Connected)
             },
             latestCheckpoint = latestCheckpoint is null
                 ? null
                 : new CheckpointDto(
                     latestCheckpoint.Id,
-                    latestCheckpoint.SessionId,
+                    latestCheckpoint.TaskId,
                     latestCheckpoint.Name,
                     latestCheckpoint.SuccessRate,
                     latestCheckpoint.AverageDuration,
@@ -71,6 +71,6 @@ public class DashboardController : ControllerBase
         });
     }
 
-    private static SessionSummaryDto ToSessionSummary(Session session) =>
-        new(session.Id, session.Name, session.Mode.ToString(), session.CurrentStage.ToString(), session.IsActive, session.CreatedAt);
+    private static TaskSummaryDto ToTaskSummary(TaskItem taskItem) =>
+        new(taskItem.Id, taskItem.Name, taskItem.Mode.ToString(), taskItem.CurrentStage.ToString(), taskItem.IsActive, taskItem.CreatedAt);
 }

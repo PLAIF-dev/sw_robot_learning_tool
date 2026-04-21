@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { useDevicePolling } from '../../hooks/useDevicePolling'
 import { useAuthStore } from '../../store/authStore'
 import { useControlStore } from '../../store/controlStore'
-import { useSessionStore } from '../../store/sessionStore'
+import { useTaskStore } from '../../store/sessionStore'
 import { EventLog } from './EventLog'
 import { RightPanel } from './RightPanel'
 import { SideNav } from './SideNav'
@@ -11,16 +11,16 @@ import { TopBar } from './TopBar'
 
 export function AppLayout() {
   const restoreAuth = useAuthStore((state) => state.restore)
-  const fetchSessions = useSessionStore((state) => state.fetchSessions)
+  const fetchTasks = useTaskStore((state) => state.fetchTasks)
   const refreshControl = useControlStore((state) => state.refresh)
 
   useDevicePolling()
 
   useEffect(() => {
     void restoreAuth()
-    void fetchSessions()
+    void fetchTasks()
     void refreshControl()
-  }, [fetchSessions, refreshControl, restoreAuth])
+  }, [fetchTasks, refreshControl, restoreAuth])
 
   return (
     <div className="flex min-h-screen flex-col">

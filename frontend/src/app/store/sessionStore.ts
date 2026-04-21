@@ -1,40 +1,40 @@
 import { create } from 'zustand'
-import { sessionsApi } from '../api/sessions'
-import type { Session, SessionMode } from '../types'
+import { tasksApi } from '../api/sessions'
+import type { TaskItem, TaskMode } from '../types'
 
-interface SessionState {
-  sessions: Session[]
-  activeSession: Session | null
-  fetchSessions: () => Promise<void>
-  activateSession: (id: string) => Promise<void>
-  createSession: (name: string, mode: SessionMode, description: string, baseCheckpointId?: string) => Promise<void>
-  duplicateSession: (id: string) => Promise<void>
+interface TaskState {
+  tasks: TaskItem[]
+  activeTask: TaskItem | null
+  fetchTasks: () => Promise<void>
+  activateTask: (id: string) => Promise<void>
+  createTask: (name: string, mode: TaskMode, description: string, baseCheckpointId?: string) => Promise<void>
+  duplicateTask: (id: string) => Promise<void>
 }
 
-export const useSessionStore = create<SessionState>((set, get) => ({
-  sessions: [],
-  activeSession: null,
+export const useTaskStore = create<TaskState>((set, get) => ({
+  tasks: [],
+  activeTask: null,
 
-  async fetchSessions() {
-    const sessions = await sessionsApi.getAll()
+  async fetchTasks() {
+    const tasks = await tasksApi.getAll()
     set({
-      sessions,
-      activeSession: sessions.find((session) => session.isActive) ?? null,
+      tasks,
+      activeTask: tasks.find((task) => task.isActive) ?? null,
     })
   },
 
-  async activateSession(id) {
-    await sessionsApi.activate(id)
-    await get().fetchSessions()
+  async activateTask(id) {
+    await tasksApi.activate(id)
+    await get().fetchTasks()
   },
 
-  async createSession(name, mode, description, baseCheckpointId) {
-    await sessionsApi.create({ name, mode, description, baseCheckpointId })
-    await get().fetchSessions()
+  async createTask(name, mode, description, baseCheckpointId) {
+    await tasksApi.create({ name, mode, description, baseCheckpointId })
+    await get().fetchTasks()
   },
 
-  async duplicateSession(id) {
-    await sessionsApi.duplicate(id)
-    await get().fetchSessions()
+  async duplicateTask(id) {
+    await tasksApi.duplicate(id)
+    await get().fetchTasks()
   },
 }))

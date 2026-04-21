@@ -34,7 +34,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddSingleton<IAuthService>(_ =>
     new MockAuthService(builder.Configuration["Auth:Password"] ?? Environment.GetEnvironmentVariable("AUTH_PASSWORD") ?? "1111"));
-builder.Services.AddSingleton<ISessionService, MockSessionService>();
+builder.Services.AddSingleton<ITaskService, MockTaskService>();
 builder.Services.AddSingleton<IDeviceService, MockDeviceService>();
 builder.Services.AddSingleton<ICameraService>(_ =>
     new MockCameraService(Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", "robot_mock_frames"))));
@@ -59,5 +59,54 @@ app.MapGet("/health", () => Results.Ok(new
     service = "robot-learning-tool-backend",
     timestamp = DateTimeOffset.UtcNow
 }));
+
+app.MapGet("/ops", () => Results.Content(
+    """
+    <!doctype html>
+    <html lang="ko">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width,initial-scale=1" />
+      <title>Robot Learning Tool Ops</title>
+      <style>
+        body{font-family:Segoe UI,sans-serif;background:#0f172a;color:#e2e8f0;margin:0;padding:24px}
+        h1{margin:0 0 16px}
+        .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+        .card{background:#111827;border:1px solid #334155;border-radius:16px;padding:16px}
+        .label{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#94a3b8}
+        pre{white-space:pre-wrap;word-break:break-word}
+      </style>
+    </head>
+    <body>
+      <h1>Ops Status</h1>
+      <div class="grid">
+        <div class="card"><div class="label">Dashboard</div><pre id="dashboard">Loading...</pre></div>
+        <div class="card"><div class="label">Devices</div><pre id="devices">Loading...</pre></div>
+        <div class="card"><div class="label">Training Stage</div><pre id="stage">Loading...</pre></div>
+        <div class="card"><div class="label">ROI</div><pre id="roi">Loading...</pre></div>
+        <div class="card"><div class="label">Logs</div><pre id="logs">Loading...</pre></div>
+      </div>
+      <script>
+        async function load(id, url){
+          const res = await fetch(url);
+          const data = await res.json();
+          document.getElementById(id).textContent = JSON.stringify(data, null, 2);
+        }
+        async function refresh(){
+          await Promise.all([
+            load('dashboard','/api/dashboard/summary'),
+            load('devices','/api/devices/status'),
+            load('stage','/api/training/current-stage'),
+            load('roi','/api/training/roi'),
+            load('logs','/api/system/logs/recent')
+          ]);
+        }
+        refresh();
+        setInterval(refresh, 5000);
+      </script>
+    </body>
+    </html>
+    """,
+    "text/html"));
 
 app.Run();

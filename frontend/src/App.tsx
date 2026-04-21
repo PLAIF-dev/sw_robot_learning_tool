@@ -2,7 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from './app/components/layout/AppLayout'
 import { LoginPage } from './app/pages/LoginPage'
 import { DashboardPage } from './app/pages/DashboardPage'
-import { SessionsPage } from './app/pages/SessionsPage'
+import { TasksPage } from './app/pages/SessionsPage'
 import { TrainingPage } from './app/pages/TrainingPage'
 import { ReviewPage } from './app/pages/ReviewPage'
 import { CheckpointsPage } from './app/pages/CheckpointsPage'
@@ -25,7 +25,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/app" element={<ProtectedApp />}>
         <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="sessions" element={<SessionsPage />} />
+        <Route path="tasks" element={<TasksPage />} />
         <Route path="training" element={<TrainingPage />} />
         <Route path="review" element={<ReviewPage />} />
         <Route path="checkpoints" element={<CheckpointsPage />} />

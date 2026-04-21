@@ -6,58 +6,58 @@ using RobotLearningTool.Domain.Models;
 namespace RobotLearningTool.Api.Controllers;
 
 [ApiController]
-[Route("api/sessions")]
-public class SessionsController : ControllerBase
+[Route("api/tasks")]
+public class TasksController : ControllerBase
 {
-    private readonly ISessionService _sessionService;
+    private readonly ITaskService _taskService;
 
-    public SessionsController(ISessionService sessionService)
+    public TasksController(ITaskService taskService)
     {
-        _sessionService = sessionService;
+        _taskService = taskService;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var sessions = await _sessionService.GetAllAsync();
-        return Ok(sessions.Select(ToSummaryDto));
+        var tasks = await _taskService.GetAllAsync();
+        return Ok(tasks.Select(ToSummaryDto));
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(string id)
     {
-        var session = await _sessionService.GetByIdAsync(id);
-        if (session is null)
+        var taskItem = await _taskService.GetByIdAsync(id);
+        if (taskItem is null)
         {
-            return NotFound(SessionNotFound());
+            return NotFound(TaskNotFound());
         }
 
-        return Ok(ToDetailDto(session));
+        return Ok(ToDetailDto(taskItem));
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateSessionDto request)
+    public async Task<IActionResult> Create([FromBody] CreateTaskDto request)
     {
-        if (!Enum.TryParse<SessionMode>(request.Mode, true, out var mode))
+        if (!Enum.TryParse<TaskMode>(request.Mode, true, out var mode))
         {
-            return BadRequest(new { error = new { code = "INVALID_MODE", message = "지원하지 않는 세션 모드입니다." } });
+            return BadRequest(new { error = new { code = "INVALID_MODE", message = "지원하지 않는 작업 모드입니다." } });
         }
 
-        var session = await _sessionService.CreateAsync(request.Name, mode, request.Description, request.BaseCheckpointId);
-        return CreatedAtAction(nameof(GetById), new { id = session.Id }, ToDetailDto(session));
+        var taskItem = await _taskService.CreateAsync(request.Name, mode, request.Description, request.BaseCheckpointId);
+        return CreatedAtAction(nameof(GetById), new { id = taskItem.Id }, ToDetailDto(taskItem));
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(string id, [FromBody] UpdateSessionDto request)
+    public async Task<IActionResult> Update(string id, [FromBody] UpdateTaskDto request)
     {
         try
         {
-            var session = await _sessionService.UpdateAsync(id, request.Name, request.Description);
-            return Ok(ToDetailDto(session));
+            var taskItem = await _taskService.UpdateAsync(id, request.Name, request.Description);
+            return Ok(ToDetailDto(taskItem));
         }
         catch (InvalidOperationException)
         {
-            return NotFound(SessionNotFound());
+            return NotFound(TaskNotFound());
         }
     }
 
@@ -66,31 +66,31 @@ public class SessionsController : ControllerBase
     {
         try
         {
-            var session = await _sessionService.DuplicateAsync(id);
-            return Ok(ToDetailDto(session));
+            var taskItem = await _taskService.DuplicateAsync(id);
+            return Ok(ToDetailDto(taskItem));
         }
         catch (InvalidOperationException)
         {
-            return NotFound(SessionNotFound());
+            return NotFound(TaskNotFound());
         }
     }
 
     [HttpGet("{id}/state")]
     public async Task<IActionResult> GetState(string id)
     {
-        var session = await _sessionService.GetByIdAsync(id);
-        if (session is null)
+        var taskItem = await _taskService.GetByIdAsync(id);
+        if (taskItem is null)
         {
-            return NotFound(SessionNotFound());
+            return NotFound(TaskNotFound());
         }
 
         return Ok(new
         {
-            sessionId = session.Id,
-            isActive = session.IsActive,
-            currentStage = session.CurrentStage.ToString(),
-            mode = session.Mode.ToString(),
-            updatedAt = session.UpdatedAt
+            taskId = taskItem.Id,
+            isActive = taskItem.IsActive,
+            currentStage = taskItem.CurrentStage.ToString(),
+            mode = taskItem.Mode.ToString(),
+            updatedAt = taskItem.UpdatedAt
         });
     }
 
@@ -99,27 +99,27 @@ public class SessionsController : ControllerBase
     {
         try
         {
-            await _sessionService.SetActiveAsync(id);
-            return Ok(new { message = "현재 세션으로 활성화했습니다." });
+            await _taskService.SetActiveAsync(id);
+            return Ok(new { message = "현재 작업으로 활성화했습니다." });
         }
         catch (InvalidOperationException)
         {
-            return NotFound(SessionNotFound());
+            return NotFound(TaskNotFound());
         }
     }
 
-    private static SessionSummaryDto ToSummaryDto(Session session) =>
-        new(session.Id, session.Name, session.Mode.ToString(), session.CurrentStage.ToString(), session.IsActive, session.CreatedAt);
+    private static TaskSummaryDto ToSummaryDto(TaskItem taskItem) =>
+        new(taskItem.Id, taskItem.Name, taskItem.Mode.ToString(), taskItem.CurrentStage.ToString(), taskItem.IsActive, taskItem.CreatedAt);
 
-    private static SessionDetailDto ToDetailDto(Session session) =>
-        new(session.Id, session.Name, session.Mode.ToString(), session.Description, session.CurrentStage.ToString(), session.IsActive, session.CreatedAt, session.UpdatedAt, session.BaseCheckpointId);
+    private static TaskDetailDto ToDetailDto(TaskItem taskItem) =>
+        new(taskItem.Id, taskItem.Name, taskItem.Mode.ToString(), taskItem.Description, taskItem.CurrentStage.ToString(), taskItem.IsActive, taskItem.CreatedAt, taskItem.UpdatedAt, taskItem.BaseCheckpointId);
 
-    private static object SessionNotFound() => new
+    private static object TaskNotFound() => new
     {
         error = new
         {
-            code = "SESSION_NOT_FOUND",
-            message = "세션을 찾을 수 없습니다."
+            code = "TASK_NOT_FOUND",
+            message = "작업을 찾을 수 없습니다."
         }
     };
 }

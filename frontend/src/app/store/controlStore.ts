@@ -21,7 +21,7 @@ interface ControlState {
   refresh: () => Promise<void>
   move: (target: TcpTarget, dx: number, dy: number, dz: number, asMode?: ControlMode) => Promise<void>
   reset: () => Promise<void>
-  startRecording: (sessionId: string) => Promise<void>
+  startRecording: (taskId: string) => Promise<void>
   stopRecording: () => Promise<void>
 }
 
@@ -85,8 +85,8 @@ export const useControlStore = create<ControlState>((set, get) => ({
     await get().refresh()
   },
 
-  async startRecording(sessionId) {
-    const record = await recordsApi.startRecording(sessionId, 'manual_test', get().target)
+  async startRecording(taskId) {
+    const record = await recordsApi.startRecording(taskId, 'manual_test', get().target)
     set({ recordingId: record.id })
   },
 

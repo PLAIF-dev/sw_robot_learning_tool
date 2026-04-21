@@ -3,7 +3,7 @@ import type { CameraChannel, CoordFrame, TcpTarget, TrainingStage } from './type
 export const ROUTES = {
   login: '/login',
   dashboard: '/app/dashboard',
-  sessions: '/app/sessions',
+  tasks: '/app/tasks',
   training: '/app/training',
   review: '/app/review',
   checkpoints: '/app/checkpoints',

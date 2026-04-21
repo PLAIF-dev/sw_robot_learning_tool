@@ -12,12 +12,15 @@ interface RoiEditorCardProps {
   onSave: (roi: RoiRectangle) => Promise<void>
 }
 
-type DragState = {
+type InteractionState = {
   pointerId: number
+  mode: 'move' | 'resize'
   startPointerX: number
   startPointerY: number
   startX: number
   startY: number
+  startWidth: number
+  startHeight: number
 }
 
 export function RoiEditorCard({ channel, roi, connected, onSave }: RoiEditorCardProps) {
@@ -25,7 +28,7 @@ export function RoiEditorCard({ channel, roi, connected, onSave }: RoiEditorCard
   const [loading, setLoading] = useState(true)
   const [draftRoi, setDraftRoi] = useState(roi)
   const [saving, setSaving] = useState(false)
-  const dragStateRef = useRef<DragState | null>(null)
+  const interactionRef = useRef<InteractionState | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -48,49 +51,73 @@ export function RoiEditorCard({ channel, roi, connected, onSave }: RoiEditorCard
 
   const frameUrl = useMemo(() => camerasApi.getFrameUrl(channel, cacheKey), [channel, cacheKey])
 
-  function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
-    const container = containerRef.current
-    if (!container) {
-      return
-    }
-
+  function startInteraction(event: ReactPointerEvent<HTMLDivElement>, mode: InteractionState['mode']) {
     event.preventDefault()
-    dragStateRef.current = {
+    event.stopPropagation()
+
+    interactionRef.current = {
       pointerId: event.pointerId,
+      mode,
       startPointerX: event.clientX,
       startPointerY: event.clientY,
       startX: draftRoi.x,
       startY: draftRoi.y,
+      startWidth: draftRoi.width,
+      startHeight: draftRoi.height,
     }
+
     event.currentTarget.setPointerCapture(event.pointerId)
+  }
+
+  function handleMovePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    startInteraction(event, 'move')
+  }
+
+  function handleResizePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    startInteraction(event, 'resize')
   }
 
   function handlePointerMove(event: ReactPointerEvent<HTMLDivElement>) {
     const container = containerRef.current
-    const dragState = dragStateRef.current
-    if (!container || !dragState || dragState.pointerId !== event.pointerId) {
+    const interaction = interactionRef.current
+    if (!container || !interaction || interaction.pointerId !== event.pointerId) {
       return
     }
 
     const bounds = container.getBoundingClientRect()
-    const deltaX = (event.clientX - dragState.startPointerX) / bounds.width
-    const deltaY = (event.clientY - dragState.startPointerY) / bounds.height
+    const deltaX = (event.clientX - interaction.startPointerX) / bounds.width
+    const deltaY = (event.clientY - interaction.startPointerY) / bounds.height
 
-    setDraftRoi((previous) => ({
-      ...previous,
-      x: clamp(dragState.startX + deltaX, 0, 1 - previous.width),
-      y: clamp(dragState.startY + deltaY, 0, 1 - previous.height),
-    }))
-  }
-
-  async function handlePointerUp(event: ReactPointerEvent<HTMLDivElement>) {
-    const dragState = dragStateRef.current
-    if (!dragState || dragState.pointerId !== event.pointerId) {
+    if (interaction.mode === 'move') {
+      setDraftRoi((previous) => ({
+        ...previous,
+        x: clamp(interaction.startX + deltaX, 0, 1 - previous.width),
+        y: clamp(interaction.startY + deltaY, 0, 1 - previous.height),
+      }))
       return
     }
 
-    dragStateRef.current = null
-    event.currentTarget.releasePointerCapture(event.pointerId)
+    setDraftRoi((previous) => {
+      const width = clamp(interaction.startWidth + deltaX, 0.05, 1 - interaction.startX)
+      const height = clamp(interaction.startHeight + deltaY, 0.05, 1 - interaction.startY)
+      return {
+        ...previous,
+        width,
+        height,
+      }
+    })
+  }
+
+  async function finishInteraction(event: ReactPointerEvent<HTMLDivElement>) {
+    const interaction = interactionRef.current
+    if (!interaction || interaction.pointerId !== event.pointerId) {
+      return
+    }
+
+    interactionRef.current = null
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
 
     setSaving(true)
     await onSave(draftRoi)
@@ -101,7 +128,7 @@ export function RoiEditorCard({ channel, roi, connected, onSave }: RoiEditorCard
     <div className="panel-muted p-4">
       <div className="mb-3 flex items-center justify-between">
         <div className="text-sm font-semibold text-slate-100">{CAMERA_CHANNEL_LABELS[channel]}</div>
-        <div className="text-xs text-slate-400">{saving ? '저장 중...' : '드래그로 이동'}</div>
+        <div className="text-xs text-slate-400">{saving ? '저장 중...' : '이동 또는 크기 조절'}</div>
       </div>
       <div ref={containerRef} className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80">
         {loading && connected && (
@@ -126,13 +153,19 @@ export function RoiEditorCard({ channel, roi, connected, onSave }: RoiEditorCard
                 width: `${draftRoi.width * 100}%`,
                 height: `${draftRoi.height * 100}%`,
               }}
-              onPointerDown={handlePointerDown}
+              onPointerDown={handleMovePointerDown}
               onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
+              onPointerUp={finishInteraction}
             >
               <div className="absolute -left-px -top-px bg-amber-300 px-2 py-1 text-[11px] font-semibold text-slate-950">
                 ROI
               </div>
+              <div
+                className="absolute bottom-0 right-0 h-4 w-4 translate-x-1/2 translate-y-1/2 cursor-se-resize rounded-full border-2 border-slate-950 bg-amber-300"
+                onPointerDown={handleResizePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={finishInteraction}
+              />
             </div>
           </>
         ) : (

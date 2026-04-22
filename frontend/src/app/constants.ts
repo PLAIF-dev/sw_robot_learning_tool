@@ -8,6 +8,7 @@ export const ROUTES = {
   review: '/app/review',
   checkpoints: '/app/checkpoints',
   system: '/app/system',
+  robot: '/app/robot',
 } as const
 
 export const TRAINING_STAGE_LABELS: Record<TrainingStage, string> = {

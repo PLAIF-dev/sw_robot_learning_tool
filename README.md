@@ -35,11 +35,18 @@ Robot Learning Tool는 듀얼암 로봇 작업 학습을 운영하기 위한 통
 
 ## 빠른 시작
 
+### 사전 준비
+
+- [Node.js](https://nodejs.org) 18 이상
+- [.NET SDK](https://dotnet.microsoft.com/download) 9 이상
+
+### 실행
+
 ```bash
 git clone <this-repo>
 cd robot-learning-tool
-cp .env.example .env
-docker compose up --build
+npm install
+npm run dev
 ```
 
 ### 접속 주소
@@ -54,7 +61,7 @@ docker compose up --build
 
 - 기본 비밀번호: `1111`
 
-## 로컬 실행
+## 개별 실행
 
 ### 백엔드
 
@@ -91,20 +98,16 @@ npm run dev
 robot-learning-tool/
 ├─ frontend/                  # React + TypeScript + Vite
 │  ├─ src/
-│  ├─ Dockerfile
 │  └─ package.json
 ├─ backend/                   # ASP.NET Core 백엔드
 │  ├─ RobotLearningTool.Api/
 │  ├─ RobotLearningTool.Application/
 │  ├─ RobotLearningTool.Domain/
 │  ├─ RobotLearningTool.Infrastructure/
-│  ├─ Dockerfile
 │  └─ RobotLearningTool.sln
-├─ docker/
 ├─ docs/
 ├─ samples/
-├─ docker-compose.yml
-├─ .env.example
+├─ package.json
 └─ README.md
 ```
 

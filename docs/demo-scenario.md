@@ -3,7 +3,8 @@
 ## 준비
 
 ```bash
-docker compose up --build
+npm install
+npm run dev
 # 브라우저: http://localhost:5173
 ```
 

@@ -7,7 +7,6 @@ import { TrainingPage } from './app/pages/TrainingPage'
 import { ReviewPage } from './app/pages/ReviewPage'
 import { CheckpointsPage } from './app/pages/CheckpointsPage'
 import { SystemPage } from './app/pages/SystemPage'
-import { RobotViewerPage } from './app/pages/RobotViewerPage'
 import { useAuthStore } from './app/store/authStore'
 
 function ProtectedApp() {
@@ -30,8 +29,7 @@ export default function App() {
         <Route path="training" element={<TrainingPage />} />
         <Route path="review" element={<ReviewPage />} />
         <Route path="checkpoints" element={<CheckpointsPage />} />
-        <Route path="robot" element={<RobotViewerPage />} />
-        <Route path="system" element={<SystemPage />} />
+<Route path="system" element={<SystemPage />} />
         <Route index element={<Navigate to="/app/dashboard" replace />} />
       </Route>
       <Route path="*" element={<Navigate to="/app/dashboard" replace />} />

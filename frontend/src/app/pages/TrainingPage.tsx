@@ -3,6 +3,7 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 import { checkpointsApi } from '../api/checkpoints'
 import { trainingApi } from '../api/training'
 import { TRAINING_STAGES } from '../constants'
+import { CameraPanel } from '../components/camera/CameraPanel'
 import { CameraView } from '../components/camera/CameraView'
 import { RoiEditorCard } from '../components/camera/RoiEditorCard'
 import { RobotViewer3D } from '../components/robot/RobotViewer3D'
@@ -20,7 +21,6 @@ import type {
   MainTrainingStatus,
   RoiRectangle,
   TcpPose,
-  TcpTarget,
   TrainingEnvironment,
   TrainingStage,
 } from '../types'
@@ -64,7 +64,13 @@ export function TrainingPage() {
   const deviceStatus = useDeviceStore((state) => state.status)
 
   const [stage, setStage] = useState<TrainingStage>('Environment')
-  const [environment, setEnvironment] = useState<TrainingEnvironment | null>(null)
+  const [environment, setEnvironment] = useState<TrainingEnvironment>({
+    robotModel: 'RB3 듀얼암 로봇',
+    controllerType: '3D Mouse',
+    learningRate: 0.001,
+    batchSize: 32,
+    maxEpisodes: 100,
+  })
   const [roiSettings, setRoiSettings] = useState<Record<CameraChannel, RoiRectangle>>(DEFAULT_ROI_MAP)
   const [classifier, setClassifier] = useState<ClassifierStatus | null>(null)
   const [demo, setDemo] = useState<DemoStatus | null>(null)
@@ -174,10 +180,6 @@ export function TrainingPage() {
   }
 
   async function handleSaveEnvironment() {
-    if (!environment) {
-      return
-    }
-
     await trainingApi.saveEnvironment(environment)
     await refresh()
   }
@@ -321,7 +323,7 @@ export function TrainingPage() {
         </aside>
 
         <section className="space-y-6">
-          {stage === 'Environment' && environment && (
+          {stage === 'Environment' && (
             <div className="space-y-6">
               <section className="panel p-6">
                 <div className="section-title">기본 설정</div>
@@ -475,15 +477,24 @@ export function TrainingPage() {
                 </p>
               </section>
 
-              <TrainingWorkspacePanel
-                leftJoints={leftJoints}
-                rightJoints={rightJoints}
-                leftTcpPose={leftTcpPose}
-                rightTcpPose={rightTcpPose}
-                selectedTarget={selectedTarget}
-                roiMap={roiSettings}
-                deviceStatus={deviceStatus}
-              />
+              <section className="panel p-6">
+                <div className="section-title">3D 로봇 뷰어</div>
+                <div className="mt-4 h-72">
+                  <RobotViewer3D leftJoints={leftJoints} rightJoints={rightJoints} selectedTarget={selectedTarget} />
+                </div>
+              </section>
+
+              <section className="panel p-6">
+                <div className="section-title">3채널 카메라</div>
+                <div className="mt-4">
+                  <CameraPanel layout="triple" roiMap={roiSettings} compact />
+                </div>
+              </section>
+
+              <section className="grid gap-6 xl:grid-cols-2">
+                <TcpPoseDisplay label="왼팔 TCP" pose={leftTcpPose} />
+                <TcpPoseDisplay label="오른팔 TCP" pose={rightTcpPose} />
+              </section>
 
               <section className="grid gap-6 xl:grid-cols-[1fr_340px]">
                 <div className="space-y-6">
@@ -572,107 +583,102 @@ export function TrainingPage() {
                 </p>
               </section>
 
-              <TrainingWorkspacePanel
-                leftJoints={leftJoints}
-                rightJoints={rightJoints}
-                leftTcpPose={leftTcpPose}
-                rightTcpPose={rightTcpPose}
-                selectedTarget={selectedTarget}
-                roiMap={roiSettings}
-                deviceStatus={deviceStatus}
-              />
-
-              <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-                <div className="panel p-6">
-                  <div className="section-title">3D 로봇 뷰어</div>
-                  <div className="mt-4">
-                    <RobotViewer3D
-                      leftJoints={leftJoints}
-                      rightJoints={rightJoints}
-                      leftTcpPose={leftTcpPose}
-                      rightTcpPose={rightTcpPose}
-                      selectedTarget={selectedTarget}
-                    />
-                  </div>
+              <section className="panel p-6">
+                <div className="section-title">3D 로봇 뷰어</div>
+                <div className="mt-4 h-72">
+                  <RobotViewer3D leftJoints={leftJoints} rightJoints={rightJoints} selectedTarget={selectedTarget} />
                 </div>
-                <div className="panel p-6">
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      ['collect', '수집하기'],
-                      ['browser', '기록 보기'],
-                    ].map(([key, label]) => (
-                      <button
-                        key={key}
-                        className={`rounded-2xl px-4 py-2 text-sm ${demoTab === key ? 'bg-sky-500 text-white' : 'bg-white/5 text-slate-300'}`}
-                        onClick={() => setDemoTab(key as DemoBrowserTab)}
-                      >
-                        {label}
+              </section>
+
+              <section className="panel p-6">
+                <div className="section-title">3채널 카메라</div>
+                <div className="mt-4">
+                  <CameraPanel layout="triple" roiMap={roiSettings} compact />
+                </div>
+              </section>
+
+              <section className="grid gap-6 xl:grid-cols-2">
+                <TcpPoseDisplay label="왼팔 TCP" pose={leftTcpPose} />
+                <TcpPoseDisplay label="오른팔 TCP" pose={rightTcpPose} />
+              </section>
+
+              <section className="panel p-6">
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    ['collect', '수집하기'],
+                    ['browser', '기록 보기'],
+                  ].map(([key, label]) => (
+                    <button
+                      key={key}
+                      className={`rounded-2xl px-4 py-2 text-sm ${demoTab === key ? 'bg-sky-500 text-white' : 'bg-white/5 text-slate-300'}`}
+                      onClick={() => setDemoTab(key as DemoBrowserTab)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                {demoTab === 'collect' ? (
+                  <div className="mt-6 space-y-4">
+                    <div className="flex flex-wrap gap-3">
+                      <button className="rounded-2xl bg-sky-500 px-4 py-3 text-sm font-semibold text-white" onClick={() => void handleStartDemoCapture()}>
+                        초기 시연 시작
                       </button>
-                    ))}
+                      <button className="rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white" onClick={() => void handleMarkDemoSuccess()}>
+                        좋은 시연으로 표시
+                      </button>
+                      <button className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-slate-200" onClick={() => void handleEndDemoCapture()}>
+                        시연 종료
+                      </button>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-3">
+                      <MetricCard label="현재 상태" value={demo.isRecording ? '녹화 중' : '대기 중'} note="수집 중에는 카메라와 3D 뷰를 함께 확인합니다." />
+                      <MetricCard label="누적 시연 수" value={`${demo.demoCount}`} note={`최소 권장 ${demo.minRequired}개`} />
+                      <MetricCard label="선택된 좋은 시연" value={`${selectedDemoCount}`} note="기록 보기 탭에서 선택합니다." />
+                    </div>
                   </div>
-
-                  {demoTab === 'collect' ? (
-                    <div className="mt-6 space-y-4">
-                      <div className="flex flex-wrap gap-3">
-                        <button className="rounded-2xl bg-sky-500 px-4 py-3 text-sm font-semibold text-white" onClick={() => void handleStartDemoCapture()}>
-                          초기 시연 시작
-                        </button>
-                        <button className="rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white" onClick={() => void handleMarkDemoSuccess()}>
-                          좋은 시연으로 표시
-                        </button>
-                        <button className="rounded-2xl bg-white/5 px-4 py-3 text-sm text-slate-200" onClick={() => void handleEndDemoCapture()}>
-                          시연 종료
-                        </button>
-                      </div>
-
-                      <div className="grid gap-4 md:grid-cols-3">
-                        <MetricCard label="현재 상태" value={demo.isRecording ? '녹화 중' : '대기 중'} note="수집 중에는 카메라와 3D 뷰를 함께 확인합니다." />
-                        <MetricCard label="누적 시연 수" value={`${demo.demoCount}`} note={`최소 권장 ${demo.minRequired}개`} />
-                        <MetricCard label="선택된 좋은 시연" value={`${selectedDemoCount}`} note="기록 보기 탭에서 선택합니다." />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_320px]">
-                      <div className="space-y-3">
-                        {demoRows.map((item) => (
-                          <button
-                            key={item.id}
-                            className={`panel-muted flex w-full items-center justify-between gap-4 p-4 text-left ${selectedDemoIds.includes(item.id) ? 'ring-1 ring-sky-400/60' : ''}`}
-                            onClick={() => toggleDemoSelection(item.id)}
-                          >
-                            <div>
-                              <div className="font-semibold text-slate-100">{item.id}</div>
-                              <div className="mt-1 text-sm text-slate-400">
-                                {item.resultLabel} · {item.durationLabel} · {formatDateTime(item.startedAt)}
-                              </div>
-                            </div>
-                            <div className="rounded-full bg-white/10 px-3 py-1 text-xs text-slate-300">
-                              {selectedDemoIds.includes(item.id) ? '선택됨' : '선택'}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="panel-muted p-4">
-                          <div className="text-sm text-slate-300">초기 모델 상태</div>
-                          <div className="mt-2 text-2xl font-semibold text-slate-50">{initialModelReady ? `준비됨 v${initialModelVersion}` : '아직 준비 전'}</div>
-                          <div className="mt-2 text-xs text-slate-400">선별한 시연만 반영해 시작 모델 품질을 안정적으로 관리합니다.</div>
-                        </div>
+                ) : (
+                  <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_320px]">
+                    <div className="space-y-3">
+                      {demoRows.map((item) => (
                         <button
-                          className={`w-full rounded-2xl px-4 py-3 text-sm font-semibold text-white ${selectedDemoCount > 0 ? 'bg-sky-500' : 'bg-slate-700 text-slate-300'}`}
-                          disabled={selectedDemoCount === 0}
-                          onClick={handlePrepareInitialModel}
+                          key={item.id}
+                          className={`panel-muted flex w-full items-center justify-between gap-4 p-4 text-left ${selectedDemoIds.includes(item.id) ? 'ring-1 ring-sky-400/60' : ''}`}
+                          onClick={() => toggleDemoSelection(item.id)}
                         >
-                          선택한 시연으로 초기 모델 준비
+                          <div>
+                            <div className="font-semibold text-slate-100">{item.id}</div>
+                            <div className="mt-1 text-sm text-slate-400">
+                              {item.resultLabel} · {item.durationLabel} · {formatDateTime(item.startedAt)}
+                            </div>
+                          </div>
+                          <div className="rounded-full bg-white/10 px-3 py-1 text-xs text-slate-300">
+                            {selectedDemoIds.includes(item.id) ? '선택됨' : '선택'}
+                          </div>
                         </button>
-                        <button className="w-full rounded-2xl bg-white/5 px-4 py-3 text-sm text-slate-200" onClick={handleResetInitialModel}>
-                          초기 상태 다시 시작
-                        </button>
-                      </div>
+                      ))}
                     </div>
-                  )}
-                </div>
+
+                    <div className="space-y-4">
+                      <div className="panel-muted p-4">
+                        <div className="text-sm text-slate-300">초기 모델 상태</div>
+                        <div className="mt-2 text-2xl font-semibold text-slate-50">{initialModelReady ? `준비됨 v${initialModelVersion}` : '아직 준비 전'}</div>
+                        <div className="mt-2 text-xs text-slate-400">선별한 시연만 반영해 시작 모델 품질을 안정적으로 관리합니다.</div>
+                      </div>
+                      <button
+                        className={`w-full rounded-2xl px-4 py-3 text-sm font-semibold text-white ${selectedDemoCount > 0 ? 'bg-sky-500' : 'bg-slate-700 text-slate-300'}`}
+                        disabled={selectedDemoCount === 0}
+                        onClick={handlePrepareInitialModel}
+                      >
+                        선택한 시연으로 초기 모델 준비
+                      </button>
+                      <button className="w-full rounded-2xl bg-white/5 px-4 py-3 text-sm text-slate-200" onClick={handleResetInitialModel}>
+                        초기 상태 다시 시작
+                      </button>
+                    </div>
+                  </div>
+                )}
               </section>
             </div>
           )}
@@ -687,30 +693,26 @@ export function TrainingPage() {
                 </p>
               </section>
 
-              <TrainingWorkspacePanel
-                leftJoints={leftJoints}
-                rightJoints={rightJoints}
-                leftTcpPose={leftTcpPose}
-                rightTcpPose={rightTcpPose}
-                selectedTarget={selectedTarget}
-                roiMap={roiSettings}
-                deviceStatus={deviceStatus}
-              />
-
-              <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-                <div className="panel p-6">
-                  <div className="section-title">3D 로봇 뷰어</div>
-                  <div className="mt-4">
-                    <RobotViewer3D
-                      leftJoints={leftJoints}
-                      rightJoints={rightJoints}
-                      leftTcpPose={leftTcpPose}
-                      rightTcpPose={rightTcpPose}
-                      selectedTarget={selectedTarget}
-                    />
-                  </div>
+              <section className="panel p-6">
+                <div className="section-title">3D 로봇 뷰어</div>
+                <div className="mt-4 h-72">
+                  <RobotViewer3D leftJoints={leftJoints} rightJoints={rightJoints} selectedTarget={selectedTarget} />
                 </div>
-                <div className="space-y-6">
+              </section>
+
+              <section className="panel p-6">
+                <div className="section-title">3채널 카메라</div>
+                <div className="mt-4">
+                  <CameraPanel layout="triple" roiMap={roiSettings} compact />
+                </div>
+              </section>
+
+              <section className="grid gap-6 xl:grid-cols-2">
+                <TcpPoseDisplay label="왼팔 TCP" pose={leftTcpPose} />
+                <TcpPoseDisplay label="오른팔 TCP" pose={rightTcpPose} />
+              </section>
+
+              <div className="space-y-6">
                   <div className="panel p-6">
                     <div className="section-title">운영 콘솔</div>
                     <div className="mt-4 flex flex-wrap gap-3">
@@ -781,7 +783,6 @@ export function TrainingPage() {
                     </div>
                   </div>
                 </div>
-              </section>
             </div>
           )}
 
@@ -980,58 +981,23 @@ function StatusRow({
   )
 }
 
-function TrainingWorkspacePanel({
-  leftJoints,
-  rightJoints,
-  leftTcpPose,
-  rightTcpPose,
-  selectedTarget,
-  roiMap,
-  deviceStatus,
-}: {
-  leftJoints: number[]
-  rightJoints: number[]
-  leftTcpPose: TcpPose | null
-  rightTcpPose: TcpPose | null
-  selectedTarget: TcpTarget
-  roiMap: Record<CameraChannel, RoiRectangle>
-  deviceStatus: DeviceStatus | null
-}) {
+function TcpPoseDisplay({ label, pose }: { label: string; pose: TcpPose | null }) {
   return (
-    <section className="grid gap-4 md:grid-cols-2">
-      <RobotViewer3D
-        leftJoints={leftJoints}
-        rightJoints={rightJoints}
-        leftTcpPose={leftTcpPose}
-        rightTcpPose={rightTcpPose}
-        selectedTarget={selectedTarget}
-        className="h-[360px]"
-      />
-      <CameraView
-        channel="head"
-        connected={deviceStatus?.headCamera.connected ?? false}
-        frameWidth={deviceStatus?.headCamera.width ?? 1280}
-        frameHeight={deviceStatus?.headCamera.height ?? 720}
-        roi={roiMap.head}
-        className="min-h-[360px]"
-      />
-      <CameraView
-        channel="left"
-        connected={deviceStatus?.leftCamera.connected ?? false}
-        frameWidth={deviceStatus?.leftCamera.width ?? 640}
-        frameHeight={deviceStatus?.leftCamera.height ?? 480}
-        roi={roiMap.left}
-        className="min-h-[360px]"
-      />
-      <CameraView
-        channel="right"
-        connected={deviceStatus?.rightCamera.connected ?? false}
-        frameWidth={deviceStatus?.rightCamera.width ?? 640}
-        frameHeight={deviceStatus?.rightCamera.height ?? 480}
-        roi={roiMap.right}
-        className="min-h-[360px]"
-      />
-    </section>
+    <div className="panel p-6">
+      <div className="section-title">{label}</div>
+      {pose ? (
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          {Object.entries(pose).map(([key, value]) => (
+            <div key={key} className="panel-muted p-2">
+              <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">{key}</div>
+              <div className="mt-1 text-sm font-medium text-slate-100">{value.toFixed(3)}</div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="mt-4 text-sm text-slate-400">연결 대기 중</div>
+      )}
+    </div>
   )
 }
 

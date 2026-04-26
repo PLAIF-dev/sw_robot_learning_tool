@@ -6,10 +6,12 @@ export function CameraPanel({
   layout,
   singleChannel = 'head',
   roiMap,
+  compact = false,
 }: {
   layout: 'single' | 'triple'
   singleChannel?: CameraChannel
   roiMap?: Partial<Record<CameraChannel, RoiRectangle>>
+  compact?: boolean
 }) {
   const status = useDeviceStore((state) => state.status)
 
@@ -46,29 +48,21 @@ export function CameraPanel({
     )
   }
 
+  const channels: CameraChannel[] = ['left', 'right', 'head']
+
   return (
     <div className="grid gap-3 lg:grid-cols-3">
-      <CameraView
-        channel="left"
-        connected={connected.left}
-        frameWidth={dimensions.left.width}
-        frameHeight={dimensions.left.height}
-        roi={roiMap?.left}
-      />
-      <CameraView
-        channel="right"
-        connected={connected.right}
-        frameWidth={dimensions.right.width}
-        frameHeight={dimensions.right.height}
-        roi={roiMap?.right}
-      />
-      <CameraView
-        channel="head"
-        connected={connected.head}
-        frameWidth={dimensions.head.width}
-        frameHeight={dimensions.head.height}
-        roi={roiMap?.head}
-      />
+      {channels.map((ch) => (
+        <div key={ch} className={compact ? 'max-h-44 overflow-hidden' : ''}>
+          <CameraView
+            channel={ch}
+            connected={connected[ch]}
+            frameWidth={dimensions[ch].width}
+            frameHeight={dimensions[ch].height}
+            roi={roiMap?.[ch]}
+          />
+        </div>
+      ))}
     </div>
   )
 }

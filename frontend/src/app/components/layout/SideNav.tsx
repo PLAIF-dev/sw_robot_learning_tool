@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { Archive, BookOpen, Bot, Gauge, Layers3, PlayCircle, Settings } from 'lucide-react'
+import { Archive, BookOpen, Gauge, Layers3, PlayCircle, Settings } from 'lucide-react'
 import { ROUTES } from '../../constants'
 
 const items = [
@@ -8,7 +8,6 @@ const items = [
   { to: ROUTES.training, label: '학습 실행', icon: PlayCircle },
   { to: ROUTES.review, label: '기록 검토', icon: BookOpen },
   { to: ROUTES.checkpoints, label: '저장된 모델', icon: Archive },
-  { to: ROUTES.robot, label: '로봇 뷰어', icon: Bot },
   { to: ROUTES.system, label: '시스템', icon: Settings },
 ]
 

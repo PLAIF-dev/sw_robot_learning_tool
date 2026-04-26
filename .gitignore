@@ -2,8 +2,8 @@
 .env
 .env.local
 
-# Frontend
-frontend/node_modules/
+# Node
+node_modules/
 frontend/dist/
 frontend/.vite/
 

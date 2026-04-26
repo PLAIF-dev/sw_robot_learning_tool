@@ -813,7 +813,7 @@ export function TrainingPage() {
                 <div className="section-title">결과 검토 및 배포</div>
                 <h1 className="mt-3 text-3xl font-semibold text-slate-50">저장된 모델을 비교하고 최종 모델을 선택합니다.</h1>
                 <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-400">
-                  저장된 모델의 성능과 실행 결과를 비교해 운영에 적용할 모델을 선택합니다. 선택한 모델의 replay와 주요 지표를 함께 검토할 수 있습니다.
+                  이 메뉴에서는 학습이 완료된 모델을 사람 개입 없이 수십회 가량 실물 로봇으로 문제없는지 검증해봅니다. 고객 배포용이면 기능으로 들어가야 합니다. 체크포인트를 reset하는 기능도 필요합니다.
                 </p>
               </section>
 

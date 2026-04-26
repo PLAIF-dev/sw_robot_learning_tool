@@ -1,4 +1,7 @@
-import { KEYMAP_HELP } from '../../constants'
+const KEYMAP_HELP = [
+  { target: 'Robot right arm', keys: 'A/D left-right, W/S front-back, Q/E up-down' },
+  { target: 'Robot left arm', keys: 'H/K left-right, U/J front-back, Y/I up-down' },
+]
 
 export function KeyboardHelpModal({
   open,

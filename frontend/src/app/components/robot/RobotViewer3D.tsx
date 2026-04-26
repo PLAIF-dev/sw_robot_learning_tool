@@ -1,66 +1,170 @@
+import { useEffect, useRef, useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { Grid, OrbitControls } from '@react-three/drei'
-import type { TcpTarget } from '../../types'
+import type { TcpPose, TcpTarget } from '../../types'
+import { useControlStore } from '../../store/controlStore'
+import { URDFViewer } from './URDFViewer'
+import { buildJointAngles, URDF_URL } from './robotModel'
 
-function Arm({
-  side,
-  joints,
-  active,
-}: {
-  side: 'left' | 'right'
-  joints: number[]
-  active: boolean
-}) {
-  const xOffset = side === 'left' ? 0.33 : -0.33
-  const color = side === 'left' ? '#38bdf8' : '#fb923c'
-  const muted = side === 'left' ? '#0f4c68' : '#7c2d12'
-  const material = active ? color : muted
+const JOINT_JOG_STEP = 0.15
+const JOINT_COUNT = 6
+const JOINT_JOG_REPEAT_MS = 80
 
-  return (
-    <group position={[xOffset, 0, 0]}>
-      <mesh position={[0, 0.18, 0]} rotation={[joints[0] ?? 0, 0, joints[1] ?? 0]}>
-        <boxGeometry args={[0.08, 0.32, 0.08]} />
-        <meshStandardMaterial color={material} />
-      </mesh>
-      <mesh position={[0, 0.48, 0]} rotation={[joints[2] ?? 0, 0, 0]}>
-        <boxGeometry args={[0.06, 0.28, 0.06]} />
-        <meshStandardMaterial color={material} />
-      </mesh>
-      <mesh position={[0, 0.66, 0]}>
-        <sphereGeometry args={[0.045, 20, 20]} />
-        <meshStandardMaterial color={active ? '#f8fafc' : '#475569'} emissive={active ? color : '#0f172a'} emissiveIntensity={0.4} />
-      </mesh>
-    </group>
-  )
+const TARGET_LABELS: Record<TcpTarget, string> = {
+  left: 'Left TCP',
+  right: 'Right TCP',
+  both: 'Both TCPs',
 }
 
 export function RobotViewer3D({
   leftJoints,
   rightJoints,
+  leftTcpPose,
+  rightTcpPose,
   selectedTarget,
+  className = '',
 }: {
   leftJoints: number[]
   rightJoints: number[]
+  leftTcpPose: TcpPose | null
+  rightTcpPose: TcpPose | null
   selectedTarget: TcpTarget
+  className?: string
 }) {
+  const jogJoint = useControlStore((state) => state.jogJoint)
+  const repeatTimerRef = useRef<number | null>(null)
+  const inFlightRef = useRef(false)
+  const jointAngles = useMemo(() => buildJointAngles(leftJoints, rightJoints), [leftJoints, rightJoints])
+  const overlayItems = useMemo(() => {
+    const buildSection = (label: string, tcpPose: TcpPose | null, joints: number[], target: 'left' | 'right') => ({
+      label,
+      tcpPose,
+      joints,
+      target,
+    })
+
+    return [
+      buildSection('Left TCP', leftTcpPose, leftJoints, 'left'),
+      buildSection('Right TCP', rightTcpPose, rightJoints, 'right'),
+    ]
+  }, [leftJoints, leftTcpPose, rightJoints, rightTcpPose])
+
+  useEffect(() => () => {
+    if (repeatTimerRef.current !== null) {
+      window.clearInterval(repeatTimerRef.current)
+    }
+  }, [])
+
+  function stopJointJog() {
+    if (repeatTimerRef.current !== null) {
+      window.clearInterval(repeatTimerRef.current)
+      repeatTimerRef.current = null
+    }
+  }
+
+  async function runJointJog(target: 'left' | 'right', jointIndex: number, delta: number) {
+    if (inFlightRef.current) {
+      return
+    }
+
+    inFlightRef.current = true
+    try {
+      await jogJoint(target, jointIndex, delta)
+    } finally {
+      inFlightRef.current = false
+    }
+  }
+
+  function startJointJog(target: 'left' | 'right', jointIndex: number, delta: number) {
+    stopJointJog()
+    void runJointJog(target, jointIndex, delta)
+    repeatTimerRef.current = window.setInterval(() => {
+      void runJointJog(target, jointIndex, delta)
+    }, JOINT_JOG_REPEAT_MS)
+  }
+
   return (
-    <div className="panel-muted h-[280px] overflow-hidden">
-      <Canvas camera={{ position: [1.6, 1.15, 1.4], fov: 48 }}>
+    <div className={`panel-muted relative h-[700px] overflow-hidden ${className}`}>
+      <Canvas camera={{ position: [2.5, 1.8, 2.5], fov: 45 }} shadows>
         <ambientLight intensity={0.55} />
-        <directionalLight position={[3, 3, 2]} intensity={1.3} />
-        <mesh position={[0, -0.12, 0]}>
-          <boxGeometry args={[0.8, 0.22, 0.56]} />
-          <meshStandardMaterial color="#334155" />
-        </mesh>
-        <mesh position={[0, 0.2, 0]}>
-          <boxGeometry args={[0.66, 0.28, 0.34]} />
-          <meshStandardMaterial color="#475569" />
-        </mesh>
-        <Arm side="left" joints={leftJoints} active={selectedTarget === 'left' || selectedTarget === 'both'} />
-        <Arm side="right" joints={rightJoints} active={selectedTarget === 'right' || selectedTarget === 'both'} />
-        <Grid args={[4, 4]} position={[0, -0.24, 0]} infiniteGrid cellColor="#1e293b" sectionColor="#334155" fadeDistance={12} />
-        <OrbitControls makeDefault enablePan target={[0, 0.2, 0]} />
+        <directionalLight position={[3, 4, 2]} intensity={1.15} castShadow />
+        <directionalLight position={[-2, 2, -2]} intensity={0.35} />
+        <URDFViewer url={URDF_URL} jointAngles={jointAngles} />
+        <Grid
+          args={[6, 6]}
+          position={[0, -0.01, 0]}
+          infiniteGrid
+          cellColor="#1e293b"
+          sectionColor="#334155"
+          fadeDistance={10}
+        />
+        <OrbitControls makeDefault enablePan target={[0, 0.8, 0]} />
       </Canvas>
+
+      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between px-4 py-3 text-xs">
+        <span className="rounded-full bg-slate-950/80 px-3 py-1 text-slate-200">
+          dual_rb3_730e_ver3
+        </span>
+        <span className="rounded-full bg-sky-500/20 px-3 py-1 text-sky-200">
+          {TARGET_LABELS[selectedTarget]}
+        </span>
+      </div>
+
+      <div className="pointer-events-auto absolute right-4 top-14 z-10 w-[240px] space-y-3 text-xs">
+        {overlayItems.map((item) => (
+          <div key={item.label} className="pointer-events-auto rounded-2xl border border-white/10 bg-slate-950/80 p-3 text-slate-200 shadow-lg backdrop-blur-sm">
+            <div className="font-semibold text-sky-200">{item.label}</div>
+            <div className="mt-2 text-[11px] uppercase tracking-[0.18em] text-slate-400">TCP Pose</div>
+            <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-1">
+              {item.tcpPose
+                ? Object.entries(item.tcpPose).map(([key, value]) => (
+                  <div key={key} className="flex items-center justify-between gap-2">
+                    <span className="text-slate-400">{key}</span>
+                    <span className="font-mono text-slate-100">{value.toFixed(3)}</span>
+                  </div>
+                ))
+                : <div className="col-span-2 text-slate-500">No pose</div>}
+            </div>
+            <div className="mt-3 text-[11px] uppercase tracking-[0.18em] text-slate-400">Joint Pose</div>
+            <div className="mt-1 space-y-1">
+              {Array.from({ length: JOINT_COUNT }, (_, index) => item.joints[index] ?? 0).map((joint, index) => (
+                <div key={`${item.label}-${index}`} className="flex items-center justify-between gap-2">
+                  <span className="w-8 text-slate-400">J{index + 1}</span>
+                  <button
+                    type="button"
+                    className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-slate-200 transition hover:bg-white/10"
+                    onPointerDown={(event) => {
+                      event.preventDefault()
+                      event.stopPropagation()
+                      startJointJog(item.target, index, -JOINT_JOG_STEP)
+                    }}
+                    onPointerUp={stopJointJog}
+                    onPointerCancel={stopJointJog}
+                    onPointerLeave={stopJointJog}
+                  >
+                    -
+                  </button>
+                  <span className="min-w-[68px] text-right font-mono text-slate-100">{joint.toFixed(3)}</span>
+                  <button
+                    type="button"
+                    className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-slate-200 transition hover:bg-white/10"
+                    onPointerDown={(event) => {
+                      event.preventDefault()
+                      event.stopPropagation()
+                      startJointJog(item.target, index, JOINT_JOG_STEP)
+                    }}
+                    onPointerUp={stopJointJog}
+                    onPointerCancel={stopJointJog}
+                    onPointerLeave={stopJointJog}
+                  >
+                    +
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

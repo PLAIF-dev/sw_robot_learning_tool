@@ -1,8 +1,8 @@
 import axios from 'axios'
 import { useConnectionStore } from '../store/connectionStore'
 
-const rawBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ?? ''
-const apiBaseUrl = rawBaseUrl ? `${rawBaseUrl}/api` : '/api'
+const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '')
+const apiBaseUrl = configuredBaseUrl ? `${configuredBaseUrl}/api` : '/api'
 
 export const apiClient = axios.create({
   baseURL: apiBaseUrl,

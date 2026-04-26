@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
 using RobotLearningTool.Application.Interfaces;
+using RobotLearningTool.Application.Services;
+using RobotLearningTool.Infrastructure.Middleware;
 using RobotLearningTool.Infrastructure.Mock;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -41,7 +43,17 @@ builder.Services.AddSingleton<ICameraService>(_ =>
 builder.Services.AddSingleton<ITrainingService, MockTrainingService>();
 builder.Services.AddSingleton<IMotionRecordService, MockMotionRecordService>();
 builder.Services.AddSingleton<ICheckpointService, MockCheckpointService>();
-builder.Services.AddSingleton<IIkService, MockIkService>();
+builder.Services.AddSingleton<IRobotControlService, RobotControlService>();
+
+var robotControlProvider = builder.Configuration["RobotControl:Provider"] ?? "Mock";
+if (string.Equals(robotControlProvider, "Middleware", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.AddSingleton<IRobotMiddlewareClient, RobotMiddlewareClient>();
+}
+else
+{
+    builder.Services.AddSingleton<IRobotMiddlewareClient, MockRobotMiddlewareClient>();
+}
 
 var app = builder.Build();
 

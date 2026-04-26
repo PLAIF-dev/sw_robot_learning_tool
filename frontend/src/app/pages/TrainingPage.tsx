@@ -3,7 +3,7 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 import { checkpointsApi } from '../api/checkpoints'
 import { trainingApi } from '../api/training'
 import { TRAINING_STAGES } from '../constants'
-import { CameraPanel } from '../components/camera/CameraPanel'
+import { CameraView } from '../components/camera/CameraView'
 import { RoiEditorCard } from '../components/camera/RoiEditorCard'
 import { RobotViewer3D } from '../components/robot/RobotViewer3D'
 import { useKeyboardTcp } from '../hooks/useKeyboardTcp'
@@ -13,11 +13,14 @@ import type {
   CameraChannel,
   Checkpoint,
   ClassifierStatus,
+  DeviceStatus,
   DemoRecord,
   DemoStatus,
   EvaluationSummary,
   MainTrainingStatus,
   RoiRectangle,
+  TcpPose,
+  TcpTarget,
   TrainingEnvironment,
   TrainingStage,
 } from '../types'
@@ -52,6 +55,8 @@ type DemoBrowserTab = 'collect' | 'browser'
 type DecisionSource = keyof typeof DECISION_SOURCE_LABELS
 
 export function TrainingPage() {
+  const leftTcpPose = useControlStore((state) => state.leftTcpPose)
+  const rightTcpPose = useControlStore((state) => state.rightTcpPose)
   const leftJoints = useControlStore((state) => state.leftJoints)
   const rightJoints = useControlStore((state) => state.rightJoints)
   const selectedTarget = useControlStore((state) => state.target)
@@ -88,7 +93,7 @@ export function TrainingPage() {
   const [finalModelId, setFinalModelId] = useState<string | null>(null)
   const [replayChannel, setReplayChannel] = useState<CameraChannel>('head')
 
-  useKeyboardTcp(stage === 'Demo' || stage === 'MainTraining')
+  useKeyboardTcp(stage === 'Classifier' || stage === 'Demo' || stage === 'MainTraining')
 
   async function refresh() {
     const [stageResponse, nextEnvironment, nextRoi, nextClassifier, nextDemo, nextMain, nextEvaluation, nextCheckpoints] = await Promise.all([
@@ -327,7 +332,7 @@ export function TrainingPage() {
               </section>
 
               <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-                <div className="panel p-6">
+                <div className="hidden">
                   <div className="section-title">장비 선택</div>
                   <div className="mt-4 grid gap-4 md:grid-cols-2">
                     <label className="panel-muted p-4">
@@ -393,7 +398,7 @@ export function TrainingPage() {
                   </div>
                 </div>
 
-                <div className="panel p-6">
+                <div className="hidden">
                   <div className="section-title">진행 전 확인</div>
                   <div className="mt-4 space-y-3">
                     <StatusRow label="왼팔 연결" value={deviceStatus?.leftArm.connected ? '정상' : '확인 필요'} tone={deviceStatus?.leftArm.connected ? 'good' : 'neutral'} />
@@ -470,12 +475,15 @@ export function TrainingPage() {
                 </p>
               </section>
 
-              <section className="panel p-6">
-                <div className="section-title">3채널 카메라</div>
-                <div className="mt-4">
-                  <CameraPanel layout="triple" roiMap={roiSettings} />
-                </div>
-              </section>
+              <TrainingWorkspacePanel
+                leftJoints={leftJoints}
+                rightJoints={rightJoints}
+                leftTcpPose={leftTcpPose}
+                rightTcpPose={rightTcpPose}
+                selectedTarget={selectedTarget}
+                roiMap={roiSettings}
+                deviceStatus={deviceStatus}
+              />
 
               <section className="grid gap-6 xl:grid-cols-[1fr_340px]">
                 <div className="space-y-6">
@@ -564,18 +572,27 @@ export function TrainingPage() {
                 </p>
               </section>
 
-              <section className="panel p-6">
-                <div className="section-title">3채널 카메라</div>
-                <div className="mt-4">
-                  <CameraPanel layout="triple" roiMap={roiSettings} />
-                </div>
-              </section>
+              <TrainingWorkspacePanel
+                leftJoints={leftJoints}
+                rightJoints={rightJoints}
+                leftTcpPose={leftTcpPose}
+                rightTcpPose={rightTcpPose}
+                selectedTarget={selectedTarget}
+                roiMap={roiSettings}
+                deviceStatus={deviceStatus}
+              />
 
               <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
                 <div className="panel p-6">
                   <div className="section-title">3D 로봇 뷰어</div>
                   <div className="mt-4">
-                    <RobotViewer3D leftJoints={leftJoints} rightJoints={rightJoints} selectedTarget={selectedTarget} />
+                    <RobotViewer3D
+                      leftJoints={leftJoints}
+                      rightJoints={rightJoints}
+                      leftTcpPose={leftTcpPose}
+                      rightTcpPose={rightTcpPose}
+                      selectedTarget={selectedTarget}
+                    />
                   </div>
                 </div>
                 <div className="panel p-6">
@@ -670,18 +687,27 @@ export function TrainingPage() {
                 </p>
               </section>
 
-              <section className="panel p-6">
-                <div className="section-title">3채널 카메라</div>
-                <div className="mt-4">
-                  <CameraPanel layout="triple" roiMap={roiSettings} />
-                </div>
-              </section>
+              <TrainingWorkspacePanel
+                leftJoints={leftJoints}
+                rightJoints={rightJoints}
+                leftTcpPose={leftTcpPose}
+                rightTcpPose={rightTcpPose}
+                selectedTarget={selectedTarget}
+                roiMap={roiSettings}
+                deviceStatus={deviceStatus}
+              />
 
               <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
                 <div className="panel p-6">
                   <div className="section-title">3D 로봇 뷰어</div>
                   <div className="mt-4">
-                    <RobotViewer3D leftJoints={leftJoints} rightJoints={rightJoints} selectedTarget={selectedTarget} />
+                    <RobotViewer3D
+                      leftJoints={leftJoints}
+                      rightJoints={rightJoints}
+                      leftTcpPose={leftTcpPose}
+                      rightTcpPose={rightTcpPose}
+                      selectedTarget={selectedTarget}
+                    />
                   </div>
                 </div>
                 <div className="space-y-6">
@@ -951,6 +977,61 @@ function StatusRow({
         {value}
       </span>
     </div>
+  )
+}
+
+function TrainingWorkspacePanel({
+  leftJoints,
+  rightJoints,
+  leftTcpPose,
+  rightTcpPose,
+  selectedTarget,
+  roiMap,
+  deviceStatus,
+}: {
+  leftJoints: number[]
+  rightJoints: number[]
+  leftTcpPose: TcpPose | null
+  rightTcpPose: TcpPose | null
+  selectedTarget: TcpTarget
+  roiMap: Record<CameraChannel, RoiRectangle>
+  deviceStatus: DeviceStatus | null
+}) {
+  return (
+    <section className="grid gap-4 md:grid-cols-2">
+      <RobotViewer3D
+        leftJoints={leftJoints}
+        rightJoints={rightJoints}
+        leftTcpPose={leftTcpPose}
+        rightTcpPose={rightTcpPose}
+        selectedTarget={selectedTarget}
+        className="h-[360px]"
+      />
+      <CameraView
+        channel="head"
+        connected={deviceStatus?.headCamera.connected ?? false}
+        frameWidth={deviceStatus?.headCamera.width ?? 1280}
+        frameHeight={deviceStatus?.headCamera.height ?? 720}
+        roi={roiMap.head}
+        className="min-h-[360px]"
+      />
+      <CameraView
+        channel="left"
+        connected={deviceStatus?.leftCamera.connected ?? false}
+        frameWidth={deviceStatus?.leftCamera.width ?? 640}
+        frameHeight={deviceStatus?.leftCamera.height ?? 480}
+        roi={roiMap.left}
+        className="min-h-[360px]"
+      />
+      <CameraView
+        channel="right"
+        connected={deviceStatus?.rightCamera.connected ?? false}
+        frameWidth={deviceStatus?.rightCamera.width ?? 640}
+        frameHeight={deviceStatus?.rightCamera.height ?? 480}
+        roi={roiMap.right}
+        className="min-h-[360px]"
+      />
+    </section>
   )
 }
 

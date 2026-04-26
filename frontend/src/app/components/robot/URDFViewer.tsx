@@ -5,6 +5,11 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js'
 import URDFLoader from 'urdf-loader'
 import type { URDFRobot } from 'urdf-loader'
 
+const TCP_AXIS_GROUP_NAME = '__tcp_axes__'
+const TCP_AXIS_LENGTH = 0.12
+const TCP_AXIS_HEAD_LENGTH = 0.03
+const TCP_AXIS_HEAD_WIDTH = 0.018
+
 // Custom binary STL parser — bypasses Three.js STLLoader which misreads COLOR= MATERIAL= headers
 async function parseBinarySTL(path: string): Promise<THREE.BufferGeometry> {
   const buf = await fetch(path).then((r) => r.arrayBuffer())
@@ -47,6 +52,52 @@ function applyDefaultMaterial(obj: THREE.Object3D) {
   })
 }
 
+function createTcpAxes() {
+  const group = new THREE.Group()
+  group.name = TCP_AXIS_GROUP_NAME
+  group.add(new THREE.ArrowHelper(
+    new THREE.Vector3(1, 0, 0),
+    new THREE.Vector3(0, 0, 0),
+    TCP_AXIS_LENGTH,
+    '#ef4444',
+    TCP_AXIS_HEAD_LENGTH,
+    TCP_AXIS_HEAD_WIDTH,
+  ))
+  group.add(new THREE.ArrowHelper(
+    new THREE.Vector3(0, 1, 0),
+    new THREE.Vector3(0, 0, 0),
+    TCP_AXIS_LENGTH,
+    '#22c55e',
+    TCP_AXIS_HEAD_LENGTH,
+    TCP_AXIS_HEAD_WIDTH,
+  ))
+  group.add(new THREE.ArrowHelper(
+    new THREE.Vector3(0, 0, 1),
+    new THREE.Vector3(0, 0, 0),
+    TCP_AXIS_LENGTH,
+    '#3b82f6',
+    TCP_AXIS_HEAD_LENGTH,
+    TCP_AXIS_HEAD_WIDTH,
+  ))
+  return group
+}
+
+function attachTcpAxes(robot: URDFRobot) {
+  const tcpFrames = [
+    'dual_rb3_730e_ver3_left_tcp_link',
+    'dual_rb3_730e_ver3_right_tcp_link',
+  ]
+
+  for (const frameName of tcpFrames) {
+    const frame = robot.frames?.[frameName]
+    if (!frame || frame.getObjectByName(TCP_AXIS_GROUP_NAME)) {
+      continue
+    }
+
+    frame.add(createTcpAxes())
+  }
+}
+
 export function URDFViewer({
   url,
   jointAngles,
@@ -62,6 +113,7 @@ export function URDFViewer({
   useEffect(() => { onLoadedRef.current = onLoaded })
 
   useEffect(() => {
+    let cancelled = false
     const loader = new URDFLoader()
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -85,8 +137,10 @@ export function URDFViewer({
     loader.load(
       url,
       (robot: URDFRobot) => {
+        if (cancelled) return
         // URDF uses Z-up; rotate to Three.js Y-up
         robot.rotation.x = -Math.PI / 2
+        attachTcpAxes(robot)
         robotRef.current = robot
         scene.add(robot)
         onLoadedRef.current?.()
@@ -96,6 +150,7 @@ export function URDFViewer({
     )
 
     return () => {
+      cancelled = true
       if (robotRef.current) {
         scene.remove(robotRef.current)
         robotRef.current = null
@@ -109,8 +164,9 @@ export function URDFViewer({
     const robot = robotRef.current
     if (!robot) return
     for (const [name, angle] of Object.entries(jointAngles)) {
-      if (robot.joints?.[name]) {
-        robot.joints[name].setAngle(angle)
+      const joint = robot.joints?.[name]
+      if (joint) {
+        joint.setJointValue(angle)
       }
     }
   }, [jointAngles])

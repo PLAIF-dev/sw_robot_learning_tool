@@ -479,8 +479,15 @@ export function TrainingPage() {
 
               <section className="panel p-6">
                 <div className="section-title">3D 로봇 뷰어</div>
-                <div className="mt-4 h-72">
-                  <RobotViewer3D leftJoints={leftJoints} rightJoints={rightJoints} selectedTarget={selectedTarget} />
+                <div className="mt-4">
+                  <RobotViewer3D
+                    leftJoints={leftJoints}
+                    rightJoints={rightJoints}
+                    leftTcpPose={leftTcpPose}
+                    rightTcpPose={rightTcpPose}
+                    selectedTarget={selectedTarget}
+                    className="h-[480px]"
+                  />
                 </div>
               </section>
 
@@ -585,8 +592,15 @@ export function TrainingPage() {
 
               <section className="panel p-6">
                 <div className="section-title">3D 로봇 뷰어</div>
-                <div className="mt-4 h-72">
-                  <RobotViewer3D leftJoints={leftJoints} rightJoints={rightJoints} selectedTarget={selectedTarget} />
+                <div className="mt-4">
+                  <RobotViewer3D
+                    leftJoints={leftJoints}
+                    rightJoints={rightJoints}
+                    leftTcpPose={leftTcpPose}
+                    rightTcpPose={rightTcpPose}
+                    selectedTarget={selectedTarget}
+                    className="h-[480px]"
+                  />
                 </div>
               </section>
 
@@ -695,8 +709,15 @@ export function TrainingPage() {
 
               <section className="panel p-6">
                 <div className="section-title">3D 로봇 뷰어</div>
-                <div className="mt-4 h-72">
-                  <RobotViewer3D leftJoints={leftJoints} rightJoints={rightJoints} selectedTarget={selectedTarget} />
+                <div className="mt-4">
+                  <RobotViewer3D
+                    leftJoints={leftJoints}
+                    rightJoints={rightJoints}
+                    leftTcpPose={leftTcpPose}
+                    rightTcpPose={rightTcpPose}
+                    selectedTarget={selectedTarget}
+                    className="h-[480px]"
+                  />
                 </div>
               </section>
 
